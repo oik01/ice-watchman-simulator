@@ -19,7 +19,6 @@ import { CANONICAL_ICE_VIEWS, getCanonicalViewById } from './data/canonicalViews
 import { HeartAnatomyEngine } from './anatomy/HeartAnatomyEngine';
 import {
   CatheterKinematicsEngine,
-  checkOrganicStationCrossing,
   computeCatheterPose,
   verifyCatheterPoseInvariants,
 } from './kinematics/CatheterKinematicsEngine';
@@ -173,14 +172,9 @@ function bootstrapWorkstation(): void {
     onCatheterStateChange: (state: CatheterState, targetState: CatheterState) => {
       if (!isEngineReady) return;
 
-      // Check organic station crossing when user steers across Fossa Ovalis / Tricuspid / LAA ostium
-      const crossing = checkOrganicStationCrossing(targetState, ui.getSimulationState());
-      if (crossing && crossing.targetStation !== targetState.station && !ui.isDemoPlaying()) {
-        ui.setCatheterState(crossing.suggestedState, false, false);
-        kinematicsEngine.setTargetState(crossing.suggestedState);
-      } else {
-        kinematicsEngine.setTargetState(targetState);
-      }
+      // Never auto-teleport stations when the user adjusts A/P, L/R, Torque, or Adv(s) knobs.
+      // Station transitions occur only via explicit station pills, canonical view selection, or demos.
+      kinematicsEngine.setTargetState(targetState);
 
       // If immediate snap occurred (state equals targetState), snap kinematics engine immediately
       const isImmediate =
