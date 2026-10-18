@@ -438,8 +438,8 @@ const activeTransducerCtx: ActiveTransducerContext = {
   station: 'ra_venous',
 };
 
-// Pre-allocated 8-slot SDF result ring buffer to eliminate 2.7M heap object allocations per frame
-const SDF_RING = Array.from({ length: 8 }, () => ({ dist: 0.0, nx: 0.0, ny: 1.0, nz: 0.0, t: 0.0 }));
+// Pre-allocated 64-slot SDF result ring buffer to eliminate heap allocations without ever overwriting active SDF refs within a point evaluation
+const SDF_RING = Array.from({ length: 64 }, () => ({ dist: 0.0, nx: 0.0, ny: 1.0, nz: 0.0, t: 0.0 }));
 let sdfRingCursor = 0;
 
 function sdCapsule3D(
@@ -454,7 +454,7 @@ function sdCapsule3D(
   bz: number,
   radius: number
 ): { dist: number; nx: number; ny: number; nz: number; t: number } {
-  const out = SDF_RING[(sdfRingCursor = (sdfRingCursor + 1) & 7)];
+  const out = SDF_RING[(sdfRingCursor = (sdfRingCursor + 1) & 63)];
   const abx = bx - ax;
   const aby = by - ay;
   const abz = bz - az;
@@ -497,7 +497,7 @@ function sdEllipsoid3D(
   ry: number,
   rz: number
 ): { dist: number; nx: number; ny: number; nz: number } {
-  const out = SDF_RING[(sdfRingCursor = (sdfRingCursor + 1) & 7)];
+  const out = SDF_RING[(sdfRingCursor = (sdfRingCursor + 1) & 63)];
   const dx = (px - cx) / rx;
   const dy = (py - cy) / ry;
   const dz = (pz - cz) / rz;
@@ -670,6 +670,7 @@ let M_bestNx = 0.0;
 let M_bestNy = 1.0;
 let M_bestNz = 0.0;
 let M_minLumenSdf = 999.0;
+let M_smoothLumenSdf = 999.0;
 let M_nearestLumenId: StructureId = StructureId.RA_CAVITY;
 let M_nearestLumenWallMm = 4.2;
 let M_nearestLumenNx = 0.0;
@@ -678,6 +679,7 @@ let M_nearestLumenNz = 0.0;
 let M_isInsideAnyBloodLumen = false;
 let M_forLandmarkScan = false;
 let M_warpHetero = 0.5;
+let M_microRoughMm = 0.0;
 
 function commitHitFast(
   id: StructureId,
@@ -694,45 +696,83 @@ function commitHitFast(
 ): void {
   if (STRUCT_VALID[id] === 0) return;
   const baseBs = customBackscatter >= 0.0 ? customBackscatter : STRUCT_BS[id];
+  const isThinFibrous =
+    id === StructureId.FOSSA_OVALIS ||
+    id === StructureId.TRICUSPID_VALVE_ANT ||
+    id === StructureId.TRICUSPID_VALVE_SEPT ||
+    id === StructureId.TRICUSPID_VALVE_POST ||
+    id === StructureId.AORTIC_VALVE_NCC ||
+    id === StructureId.AORTIC_VALVE_RCC ||
+    id === StructureId.AORTIC_VALVE_LCC ||
+    id === StructureId.PULMONIC_VALVE ||
+    id === StructureId.MITRAL_VALVE_AML_PML ||
+    id === StructureId.THEBESIAN_VALVE ||
+    id === StructureId.EUSTACHIAN_RIDGE;
+  const roughSdf = !M_forLandmarkScan && id < 40 && !isThinFibrous ? sdf + M_microRoughMm : sdf;
 
   if (isHollowShell) {
     const prevMinLumenSdf = M_minLumenSdf;
-    if (sdf < M_minLumenSdf) {
-      M_minLumenSdf = sdf;
+    if (roughSdf < M_minLumenSdf) {
+      M_minLumenSdf = roughSdf;
       M_nearestLumenId = id;
       M_nearestLumenWallMm = outerWallThicknessMm;
       M_nearestLumenNx = nx;
       M_nearestLumenNy = ny;
       M_nearestLumenNz = nz;
     }
+    if (!M_forLandmarkScan) {
+      if (M_smoothLumenSdf > 900.0) {
+        M_smoothLumenSdf = roughSdf;
+      } else {
+        const kSmooth = 22.0;
+        const hSmooth = Math.max(0.0, Math.min(1.0, 0.5 + (0.5 * (M_smoothLumenSdf - roughSdf)) / kSmooth));
+        M_smoothLumenSdf =
+          M_smoothLumenSdf * (1.0 - hSmooth) + roughSdf * hSmooth - kSmooth * hSmooth * (1.0 - hSmooth);
+      }
+    }
 
-    const wallDist = Math.abs(sdf) - thicknessMm;
+    // For live B-mode (!M_forLandmarkScan), feather the blood-facing half of the wall (`roughSdf < 0`)
+    // smoothly down to blood backscatter at `roughSdf = -innerFeatherLimit` so no lumen border is scissor-cut,
+    // without shrinking vessel/chamber lumens!
+    const innerFeatherLimit = M_forLandmarkScan ? thicknessMm : thicknessMm + 0.95;
+    const isWithinWallBand = roughSdf >= -innerFeatherLimit && roughSdf <= thicknessMm;
+
     // CSG Union Law for live B-mode (!M_forLandmarkScan):
     // Never draw an overlapping ellipsoid/capsule wall inside an already carved deeper blood lumen!
     const isInsideExistingBloodPool =
       !M_forLandmarkScan &&
-      ((carveParentChamberId > 0 && prevMinLumenSdf < -0.15) ||
-        (M_isInsideAnyBloodLumen && prevMinLumenSdf < -0.25));
+      ((carveParentChamberId > 0 && prevMinLumenSdf < -0.35) ||
+        (M_isInsideAnyBloodLumen && prevMinLumenSdf < -0.55));
 
-    if (wallDist <= 0.0 && !isInsideExistingBloodPool) {
-      const edgeProx = 1.0 - Math.min(1.0, Math.abs(wallDist) / Math.max(0.75, thicknessMm));
-      const innerEndoBoost = sdf <= 0.35 ? 0.06 * edgeProx : 0.0;
-      const heteroMod = 0.74 + 0.44 * M_warpHetero;
-      const bs = (baseBs * (0.58 + 0.28 * edgeProx) + innerEndoBoost) * heteroMod;
+    if (isWithinWallBand && !isInsideExistingBloodPool) {
+      let edgeProx: number;
+      let bs: number;
+      const heteroMod = 0.68 + 0.56 * M_warpHetero;
+      if (!M_forLandmarkScan && roughSdf < 0.0) {
+        const tIn = Math.max(0.0, Math.min(1.0, (roughSdf + innerFeatherLimit) / innerFeatherLimit));
+        edgeProx = Math.pow(tIn, 1.65);
+        const innerEndoBoost = 0.05 * edgeProx * edgeProx;
+        bs = (baseBs * (0.015 + 0.84 * edgeProx) + innerEndoBoost) * heteroMod;
+      } else {
+        const wallDist = Math.abs(roughSdf) - thicknessMm;
+        edgeProx = 1.0 - Math.min(1.0, Math.abs(wallDist) / Math.max(0.75, thicknessMm));
+        const innerEndoBoost = roughSdf <= 0.35 ? 0.05 * edgeProx : 0.0;
+        bs = (baseBs * (0.56 + 0.30 * edgeProx) + innerEndoBoost) * heteroMod;
+      }
       if (bs > M_bestBackscatter || M_bestId === 0) {
         M_bestId = id;
-        M_bestZ = STRUCT_Z[id];
+        M_bestZ = 1.61 + (STRUCT_Z[id] - 1.61) * edgeProx;
         M_bestBackscatter = bs < 0.78 ? bs : 0.78;
         M_bestAtten = STRUCT_ATTEN[id];
-        const bGrad = Math.pow(edgeProx, 0.85) * 0.65;
+        const bGrad = Math.pow(edgeProx, 1.35) * 0.52;
         if (bGrad > M_bestBorder) M_bestBorder = bGrad;
-        M_bestSdf = wallDist;
-        const sgn = sdf >= 0.0 ? 1.0 : -1.0;
+        M_bestSdf = Math.abs(roughSdf) - thicknessMm;
+        const sgn = roughSdf >= 0.0 ? 1.0 : -1.0;
         M_bestNx = nx * sgn;
         M_bestNy = ny * sgn;
         M_bestNz = nz * sgn;
       }
-    } else if (sdf < -thicknessMm) {
+    } else if (sdf < -thicknessMm || roughSdf < -innerFeatherLimit) {
       // Strictly inside the carved anechoic blood-pool lumen of this chamber/vessel!
       M_isInsideAnyBloodLumen = true;
       const isCarvingPreviousWall =
@@ -768,18 +808,41 @@ function commitHitFast(
     }
   } else {
     // Solid intracardiac landmark / valve leaflet / ridge / papillary muscle / device
-    const d = sdf - thicknessMm;
+    const softSkirt = !M_forLandmarkScan && id < 40 ? (isThinFibrous ? 0.36 : 0.88) : 0.0;
+    const effThick = thicknessMm + softSkirt;
+    const d = roughSdf - effThick;
     if (d <= 0.0) {
-      const edgeProx = 1.0 - Math.min(1.0, Math.abs(d) / Math.max(0.65, thicknessMm + 0.8));
-      const heteroMod = id >= 40 ? 1.0 : 0.76 + 0.40 * M_warpHetero;
-      const bs = baseBs * (0.68 + 0.26 * edgeProx) * heteroMod;
-      const maxBs = id >= 40 ? 1.0 : 0.84;
+      const inwardDepth = -d;
+      const featherBand =
+        !M_forLandmarkScan && id < 40
+          ? isThinFibrous
+            ? Math.max(0.38, softSkirt + 0.35 * thicknessMm)
+            : Math.max(0.95, softSkirt + 0.45 * thicknessMm)
+          : 0.35;
+      const tSolid = Math.min(1.0, inwardDepth / featherBand);
+      const solidEnv = !M_forLandmarkScan && id < 40 ? Math.pow(tSolid, isThinFibrous ? 0.78 : 1.35) : 1.0;
+      const surfProx =
+        !M_forLandmarkScan && id < 40 && roughSdf <= 0.0
+          ? 0.84 + 0.16 * Math.min(1.0, -roughSdf / Math.max(0.6, thicknessMm))
+          : 1.0 - Math.min(1.0, Math.abs(roughSdf) / Math.max(0.65, effThick));
+      const coreBoost =
+        !M_forLandmarkScan && id < 40 && !isThinFibrous && roughSdf < 0.0
+          ? Math.min(0.06, -roughSdf * 0.03)
+          : 0.0;
+      const heteroMod = id >= 40 ? 1.0 : 0.76 + 0.48 * M_warpHetero;
+      const bs =
+        (!M_forLandmarkScan && id < 40
+          ? baseBs * (0.04 + 0.90 * solidEnv) + coreBoost
+          : baseBs * (0.68 + 0.26 * surfProx)) * heteroMod;
+      const maxBs = id >= 40 ? 1.0 : 0.86;
       if (id >= 40 || bs >= M_bestBackscatter) {
         M_bestId = id;
-        M_bestZ = STRUCT_Z[id];
+        const internalZMod =
+          !M_forLandmarkScan && id < 40 && roughSdf < 0.0 ? (M_warpHetero - 0.5) * 0.24 : 0.0;
+        M_bestZ = id >= 40 ? STRUCT_Z[id] : 1.61 + (STRUCT_Z[id] - 1.61 + internalZMod) * solidEnv;
         M_bestBackscatter = bs < maxBs ? bs : maxBs;
         M_bestAtten = STRUCT_ATTEN[id];
-        const bGrad = (id >= 40 ? 0.55 : 0.32) + 0.42 * edgeProx;
+        const bGrad = (id >= 40 ? 0.52 : 0.14) + 0.44 * surfProx * solidEnv;
         if (bGrad > M_bestBorder) M_bestBorder = bGrad;
         M_bestSdf = d;
         M_bestNx = nx;
@@ -856,15 +919,24 @@ function evaluateAnalyticalCardiacAndDeviceField(
   let vz = rawZ;
   if (forLandmarkScan) {
     M_warpHetero = 0.5;
+    M_microRoughMm = 0.0;
   } else {
     const warp = sampleDomainWarp3D(rawX, rawY, rawZ);
-    M_warpHetero = warp.hetero;
-    x = rawX + warp.dx * 0.72;
-    y = rawY + warp.dy * 0.72;
-    z = rawZ + warp.dz * 0.72;
-    vx = rawX + warp.dx * 0.24;
-    vy = rawY + warp.dy * 0.24;
-    vz = rawZ + warp.dz * 0.24;
+    const warpDx = warp.dx;
+    const warpDy = warp.dy;
+    const warpDz = warp.dz;
+    const warpHet = warp.hetero;
+    // Second high-frequency 3D FBM lookup (wavelength ~2.5-5.0 mm) for authentic endocardial trabecular roughness
+    const fineWarp = sampleDomainWarp3D(rawX * 3.8 + 19.3, rawY * 3.8 - 31.7, rawZ * 3.8 + 47.1);
+    M_warpHetero = 0.46 * warpHet + 0.54 * fineWarp.hetero;
+    M_microRoughMm = (fineWarp.hetero - 0.5) * 1.45 + fineWarp.dx * 0.28;
+    // Pure non-periodic 3D value-noise FBM domain warp (!forLandmarkScan only) — zero periodic sine-wave stripes
+    x = rawX + warpDx * 1.15 + fineWarp.dx * 0.35;
+    y = rawY + warpDy * 1.15 + fineWarp.dy * 0.35;
+    z = rawZ + warpDz * 1.15 + fineWarp.dz * 0.35;
+    vx = rawX + warpDx * 0.32 + fineWarp.dx * 0.16;
+    vy = rawY + warpDy * 0.32 + fineWarp.dy * 0.16;
+    vz = rawZ + warpDz * 0.32 + fineWarp.dz * 0.16;
   }
 
   M_bestId = 0;
@@ -877,6 +949,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
   M_bestNy = 1.0;
   M_bestNz = 0.0;
   M_minLumenSdf = 999.0;
+  M_smoothLumenSdf = 999.0;
   M_nearestLumenId = StructureId.RA_CAVITY;
   M_nearestLumenWallMm = 4.2;
   M_nearestLumenNx = 0.0;
@@ -898,22 +971,90 @@ function evaluateAnalyticalCardiacAndDeviceField(
   const foCenterY = 6.5 + tspShiftY;
   const foCenterZ = -9.5 + tspShiftZ - tentMm * 0.35;
 
+  // Smooth Continuous Station & Beam Orientation Blending Weights (`spec_S_final_v2` Section 3.1.2)
+  const curStation = activeTransducerCtx.active ? activeTransducerCtx.station : 'ra_venous';
+  const isLaLive = !forLandmarkScan && curStation === 'la_transseptal';
+  const rvotElevCoord = activeTransducerCtx.active
+    ? activeTransducerCtx.pos[1] + activeTransducerCtx.faceNormal[1] * 8.5
+    : 0.0;
+  const wHighRvot =
+    !forLandmarkScan && curStation === 'rv_outflow'
+      ? smoothstep01(-1.5, 11.5, rvotElevCoord)
+      : 0.0;
+  const wVentRv =
+    !forLandmarkScan && curStation === 'rv_outflow' ? 1.0 - wHighRvot : 0.0;
+  const isHighRvotLive = wHighRvot > 0.55;
+  const isVentricularRvLive = wVentRv > 0.45;
+  const isRvotLive = isHighRvotLive;
+  const wTsp =
+    !forLandmarkScan && curStation === 'ra_venous'
+      ? smoothstep01(2.2, 4.5, tentMm)
+      : 0.0;
+  const isTspLive = wTsp > 0.35;
+  const wLeftPv =
+    !forLandmarkScan && curStation === 'ra_venous' && activeTransducerCtx.active
+      ? (1.0 - wTsp) *
+        smoothstep01(-0.34, -0.42, activeTransducerCtx.faceNormal[2]) *
+        (1.0 - smoothstep01(-0.65, -0.78, activeTransducerCtx.faceNormal[2]))
+      : 0.0;
+  const isLeftPvViewLive = wLeftPv > 0.45;
+
+  // Interatrial Septum & Fossa Ovalis 3D Curved/Tented Surface Signed Distance (`14_kour` Oblique Septal Geometry)
+  const iasNx = isTspLive ? 0.85 : 0.945;
+  const iasNy = isTspLive ? -0.42 : 0.055;
+  const iasNz = -0.31;
+  const dxFoLive = vx - 25.0;
+  const dyFoLive = vy - (4.8 + tspShiftY);
+  const dzFoLive = vz - (-6.86 + tspShiftZ * 0.22);
+  const iasRawPlaneDist = dxFoLive * iasNx + dyFoLive * iasNy + dzFoLive * iasNz;
+  const iasOutPlane = dzFoLive * 0.9625 + dxFoLive * 0.2644;
+  const iasRadialInPlane = Math.sqrt(Math.max(0.0, dyFoLive * dyFoLive + iasOutPlane * iasOutPlane));
+  const iasConeTentDisp = tentMm > 0.1 ? tentMm * 0.85 * Math.max(0.0, 1.0 - iasRadialInPlane / 7.2) : 0.0;
+  const iasAtrialCurve = iasRadialInPlane > 7.2 ? 0.0065 * Math.pow(iasRadialInPlane - 7.2, 2) : 0.0;
+  const iasPlaneDist = iasRawPlaneDist - iasConeTentDisp + iasAtrialCurve;
+
   // 41. Transseptal Puncture Sheath & Brockenbrough Needle (ONLY when tenting > 0.15mm or tspNeedleActive)
   const showTsp = tentMm > 0.15 || Boolean((simState as any).tspNeedleActive);
-  if (showTsp && rawX > -2.0 && rawX < 38.0 && rawY > -20.0 && rawY < 18.0) {
+  if (showTsp && rawX > -2.0 && rawX < 40.0 && rawY > -22.0 && rawY < 24.0) {
     if (forLandmarkScan) {
       const tspCap1 = sdCapsule3D(rawX, rawY, rawZ, 1.5, -14.0, -5.0, foCenterX + 2.2, foCenterY, foCenterZ - 1.2, 1.45);
       if (tspCap1.dist <= 0.55) {
         commitHitFast(StructureId.TRANSSEPTAL_NEEDLE_SHEATH, tspCap1.dist, 0.55, tspCap1.nx, tspCap1.ny, tspCap1.nz, 0.99, false);
       }
-    } else {
-      // Oblique transseptal sheath & needle approaching in-plane from RA cavity to the centered tenting apex of Fossa Ovalis
-      const apexX = 24.8 + tentMm * 0.62;
-      const apexY = 10.5 + tspShiftY;
-      const apexZ = -7.0 + tspShiftZ - tentMm * 0.18;
-      const tspCapLive = sdCapsule3D(vx, vy, vz, 14.2, 6.2 + tspShiftY, -4.4 + tspShiftZ, apexX, apexY, apexZ, 0.92);
-      if (tspCapLive.dist <= 0.36) {
-        commitHitFast(StructureId.TRANSSEPTAL_NEEDLE_SHEATH, tspCapLive.dist, 0.36, tspCapLive.nx, tspCapLive.ny, tspCapLive.nz, 0.99, false);
+    } else if (tentMm > 2.2 || Boolean((simState as any).tspNeedleActive)) {
+      // Crisp in-plane transseptal sheath & needle shaft in the open RA lumen (from r ~ 15 mm at 10:30–11:00
+      // straight to the exact V-tented Fossa Ovalis vertex at iasPlaneDist = 0, dyFoLive = 0, Ref `14_kour`)
+      if (iasPlaneDist >= -14.5 && iasPlaneDist <= 0.35 && Math.abs(iasOutPlane) <= 5.5) {
+        const dPerpTsp = Math.abs(dyFoLive - 0.22 * iasPlaneDist) * 0.976;
+        if (iasPlaneDist >= -3.8) {
+          if (dPerpTsp <= 0.62) {
+            commitHitFast(
+              StructureId.TRANSSEPTAL_NEEDLE_SHEATH,
+              dPerpTsp - 0.30,
+              0.38,
+              -0.22,
+              0.975,
+              0.0,
+              0.88,
+              false
+            );
+          }
+        } else {
+          // Double-rail echogenic catheter wall profile for the 8.5 Fr transseptal sheath
+          const railDist = Math.abs(dPerpTsp - 0.72) - 0.24;
+          if (railDist <= 0.34) {
+            commitHitFast(
+              StructureId.TRANSSEPTAL_NEEDLE_SHEATH,
+              railDist,
+              0.34,
+              -0.22,
+              0.975,
+              0.0,
+              0.78,
+              false
+            );
+          }
+        }
       }
     }
   }
@@ -924,7 +1065,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
     const tugOffset = simState.watchmanTugActive ? -2.2 : 0.0;
     const wmCx = forLandmarkScan ? 51.5 + tugOffset * 0.85 : 50.5 + tugOffset * 0.76;
     const wmCy = forLandmarkScan ? 28.5 + tugOffset * 0.25 : 19.8 + tugOffset * 0.62;
-    const wmCz = forLandmarkScan ? 0.5 - tugOffset * 0.15 : 0.8 + tugOffset * 0.18;
+    const wmCz = forLandmarkScan ? 0.5 - tugOffset * 0.15 : 1.0 + tugOffset * 0.18;
     const stageScale =
       wmStage === 'sheath_across'
         ? 0.38
@@ -933,8 +1074,8 @@ function evaluateAnalyticalCardiacAndDeviceField(
           : wmStage === 'triangle'
             ? 0.84
             : 1.0;
-    const radMm = (simState.watchmanSizeMm ?? 27) * (forLandmarkScan ? 0.38 : 0.34) * stageScale;
-    const wmEll = sdEllipsoid3D(rawX, rawY, rawZ, wmCx, wmCy, wmCz, radMm, radMm * 0.88, radMm * 0.88);
+    const radMm = (simState.watchmanSizeMm ?? 27) * (forLandmarkScan ? 0.38 : 0.32) * stageScale;
+    const wmEll = sdEllipsoid3D(rawX, rawY, rawZ, wmCx, wmCy, wmCz, radMm, radMm * 0.85, radMm * 0.85);
     if (wmEll.dist < 2.5) {
       if (forLandmarkScan) {
         const angleStrut = Math.atan2(rawY - wmCy, rawZ - wmCz);
@@ -972,21 +1113,21 @@ function evaluateAnalyticalCardiacAndDeviceField(
         const strutComb = 0.5 + 0.5 * Math.cos(angleStrut * 18.0 + uAxis * 1.35);
         // Flat/slightly convex proximal PET fabric face across the LAA ostium shoulder
         const capPlaneDist = Math.abs(uAxis + radMm * 0.56 - 0.025 * rPerp * rPerp);
-        const isProximalCap = capPlaneDist < 0.72 && rPerp <= radMm * 0.82;
-        const isHub = Math.hypot(uAxis + radMm * 0.58, rPerp) < 1.65;
+        const isProximalCap = capPlaneDist < 0.68 && rPerp <= radMm * 0.80;
+        const isHub = Math.hypot(uAxis + radMm * 0.58, rPerp) < 1.50;
         const isStrutPerimeter =
           uAxis >= -radMm * 0.58 &&
-          Math.abs(wmEll.dist) < 0.78 &&
-          strutComb > 0.34;
+          Math.abs(wmEll.dist) < 0.72 &&
+          strutComb > 0.36;
         if (isHub || isProximalCap || isStrutPerimeter) {
           commitHitFast(
             StructureId.WATCHMAN_FLX_DEVICE,
             0.12,
-            0.65,
+            0.58,
             wmEll.nx,
             wmEll.ny,
             wmEll.nz,
-            isHub ? 0.98 : isProximalCap ? 0.82 : 0.90,
+            isHub ? 0.94 : isProximalCap ? 0.80 : 0.86,
             false
           );
         }
@@ -1007,85 +1148,77 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
   }
 
-  const curStation = activeTransducerCtx.active ? activeTransducerCtx.station : 'ra_venous';
-  const isLaLive = !forLandmarkScan && curStation === 'la_transseptal';
-  const isHighRvotLive =
-    !forLandmarkScan &&
-    curStation === 'rv_outflow' &&
-    activeTransducerCtx.pos[1] > 5.0;
-  const isVentricularRvLive =
-    !forLandmarkScan &&
-    curStation === 'rv_outflow' &&
-    activeTransducerCtx.pos[1] <= 5.0;
-  const isRvotLive = isHighRvotLive;
-  const isTspLive = !forLandmarkScan && curStation === 'ra_venous' && tentMm > 0.5;
-  const isLeftPvViewLive =
-    !forLandmarkScan &&
-    curStation === 'ra_venous' &&
-    !isTspLive &&
-    activeTransducerCtx.active &&
-    activeTransducerCtx.faceNormal[2] < -0.40;
-
-  // Interatrial Septum & Fossa Ovalis 3D Curved/Tented Surface Signed Distance (`[SPEC PATCH #9]` Blocker A)
-  const iasNx = 0.945;
-  const iasNy = 0.055;
-  const iasNz = -0.322;
-  const dxFoLive = vx - 24.8;
-  const dyFoLive = vy - (10.5 + tspShiftY);
-  const dzFoLive = vz - (-7.0 + tspShiftZ);
-  const iasRawPlaneDist = dxFoLive * iasNx + dyFoLive * iasNy + dzFoLive * iasNz;
-  const iasRadialInPlane = Math.sqrt(Math.max(0.0, dyFoLive * dyFoLive + Math.pow(dzFoLive * 0.94 + dxFoLive * 0.32, 2)));
-  const iasConeTentDisp = tentMm > 0.1 ? tentMm * 0.66 * Math.max(0.0, 1.0 - iasRadialInPlane / 9.2) : 0.0;
-  const iasAtrialCurve = iasRadialInPlane > 8.8 ? 0.010 * Math.pow(iasRadialInPlane - 8.8, 2) : 0.0;
-  const iasPlaneDist = iasRawPlaneDist - iasConeTentDisp + iasAtrialCurve;
-
   // Tricuspid Valve Orifice 3D Opening (`[SPEC PATCH #9]` Blocker D)
   const tvOrificeEll =
-    !forLandmarkScan && !isLaLive && !isHighRvotLive && !isVentricularRvLive && !isTspLive && !isLeftPvViewLive
-      ? sdEllipsoid3D(x, y, z, 19.5, -6.5, 19.5, 10.5, 9.5, 10.5)
+    !forLandmarkScan && !isLaLive && curStation === 'ra_venous' && !isTspLive && !isLeftPvViewLive
+      ? sdEllipsoid3D(x, y, z, 19.5, -6.0, 19.5, 11.4, 10.4, 11.4)
       : null;
+  let raOpenSdf = 100.0;
 
   // ============================================================================
   // C. RIGHT ATRIUM, VENAE CAVAE & SEPTAL LANDMARKS (IDs 1..12)
   // ============================================================================
-  if (forLandmarkScan || (!isLaLive && !isLeftPvViewLive)) {
-    // 1. Right Atrium (RA) Cavity & Wall (evaluated without hard Cartesian plane cutoffs so M_minLumenSdf is C1-smooth)
-    const raEll = forLandmarkScan
-      ? sdEllipsoid3D(x, y, z, -1.5, 6.0, 2.0, 22.0 * raContract, 28.0 * raContract, 22.0 * raContract)
-      : isHighRvotLive
-        ? sdEllipsoid3D(x, y, z, 28.5, 1.5, -4.0, 14.5 * raContract, 13.5 * raContract, 14.0 * raContract)
-        : isVentricularRvLive
-          ? sdEllipsoid3D(x, y, z, 6.5, 8.0, 4.0, 13.5 * raContract, 14.5 * raContract, 13.5 * raContract)
-          : sdEllipsoid3D(x, y, z, 2.5, 5.5, 3.0, 24.5 * raContract, 27.5 * raContract, 22.5 * raContract);
+  if (forLandmarkScan || (!isLaLive && wLeftPv < 0.75)) {
+    // 1. Right Atrium (RA) Cavity & Wall (smoothly interpolated across RV/RVOT/RA stations)
+    const raCx = forLandmarkScan
+      ? -1.5
+      : curStation === 'rv_outflow'
+        ? 6.5 * wVentRv + 28.5 * wHighRvot
+        : isTspLive
+          ? 3.0
+          : 2.5;
+    const raCy = forLandmarkScan
+      ? 6.0
+      : curStation === 'rv_outflow'
+        ? 8.0 * wVentRv + 1.5 * wHighRvot
+        : isTspLive
+          ? -3.5
+          : 5.5;
+    const raCz = forLandmarkScan
+      ? 2.0
+      : curStation === 'rv_outflow'
+        ? 4.0 * wVentRv + -4.0 * wHighRvot
+        : 3.0;
+    const raRx = (forLandmarkScan ? 22.0 : curStation === 'rv_outflow' ? 13.5 + 1.0 * wHighRvot : isTspLive ? 21.5 : 24.5) * raContract;
+    const raRy = (forLandmarkScan ? 28.0 : curStation === 'rv_outflow' ? 14.5 - 1.0 * wHighRvot : isTspLive ? 24.5 : 27.5) * raContract;
+    const raRz = (forLandmarkScan ? 22.0 : curStation === 'rv_outflow' ? 13.5 + 0.5 * wHighRvot : 22.5) * raContract;
+
+    const raEll = sdEllipsoid3D(x, y, z, raCx, raCy, raCz, raRx, raRy, raRz);
+    raOpenSdf = raEll.dist;
     let raSdf = raEll.dist;
-    if (!forLandmarkScan && !isHighRvotLive && !isVentricularRvLive) {
-      if (isTspLive) {
-        // Extend RA blood pool right up to the anterior face of the tented Fossa Ovalis & Limbus (`zf_13` Blocker A)
+    if (!forLandmarkScan && curStation === 'ra_venous') {
+      if (wTsp > 0.25) {
+        // Near-field RA cavity in upper-left/center (`10-12 o'clock`) extending smoothly across the Superior/Inferior Limbus (`14_kour`)
         const raTspCorridor = sdEllipsoid3D(
           x,
           y,
           z,
-          14.5,
-          10.5 + tspShiftY,
-          -5.5 + tspShiftZ,
-          24.0 * raContract,
-          21.5 * raContract,
-          21.0 * raContract
+          16.5,
+          7.5 + tspShiftY,
+          -5.0 + tspShiftZ,
+          26.5 * raContract,
+          27.5 * raContract,
+          25.0 * raContract
         );
-        const raToSeptumSdf = Math.max(raTspCorridor.dist, iasPlaneDist - 0.90);
+        const rimRampRa = smoothstep01(6.5, 14.5, iasRadialInPlane);
+        const foThinOffset = 0.25 + (dyFoLive > 0.0 ? 1.55 : 1.15) * rimRampRa;
+        const raToSeptumSdf = Math.max(raTspCorridor.dist, iasPlaneDist + foThinOffset);
         raSdf = Math.min(raSdf, raToSeptumSdf);
-        if (iasRadialInPlane <= 19.5 && iasPlaneDist >= -0.66 && Math.abs(raSdf) <= 1.55) {
-          raSdf = 4.0;
-        }
-      } else if (tvOrificeEll && tvOrificeEll.dist < -0.2 && Math.abs(raSdf) <= 1.55) {
-        // Carve open the RA side of the Tricuspid Valve orifice (`zf_02` Blocker D)
-        raSdf = Math.min(raSdf, tvOrificeEll.dist - 1.65);
+      } else if (tvOrificeEll) {
+        // C1-smooth CSG carving of RA_CAVITY wall across the open Tricuspid Valve orifice (`zf_02` Blocker D)
+        raSdf -= 4.8 * smoothstep01(1.2, -2.2, tvOrificeEll.dist);
       }
     }
+    const raWallThick =
+      !forLandmarkScan && wTsp > 0.25 && Math.abs(iasPlaneDist) < 5.0
+        ? 0.45 + 1.10 * smoothstep01(6.5, 14.5, iasRadialInPlane)
+        : forLandmarkScan
+          ? 2.1
+          : 1.55;
     commitHitFast(
       StructureId.RA_CAVITY,
       raSdf,
-      forLandmarkScan ? 2.1 : 1.55,
+      raWallThick,
       raEll.nx,
       raEll.ny,
       raEll.nz,
@@ -1096,8 +1229,8 @@ function evaluateAnalyticalCardiacAndDeviceField(
       4.2
     );
 
-    // 4. Superior Vena Cava (SVC)
-    if (forLandmarkScan || (!isRvotLive && !isVentricularRvLive && !isTspLive && rawY > 14.0)) {
+    // 4. Superior Vena Cava (SVC) — active in superior RA so Posterior/Superior A/P tilt sweeps smoothly into SVC!
+    if (forLandmarkScan || (curStation === 'ra_venous' && rawY > (isTspLive ? 25.0 : 14.0))) {
       const svcCap = sdCapsule3D(x, y, z, -1.0, 22.0, -3.5, -0.8, 82.0, -4.8, 10.5);
       commitHitFast(StructureId.SVC, svcCap.dist, 1.65, svcCap.nx, svcCap.ny, svcCap.nz, 0.44, true, 12.0, StructureId.RA_CAVITY, 3.8);
       if (svcCap.dist < -1.8) {
@@ -1105,8 +1238,8 @@ function evaluateAnalyticalCardiacAndDeviceField(
       }
     }
 
-    // 5. Inferior Vena Cava (IVC)
-    if (forLandmarkScan || (!isRvotLive && !isVentricularRvLive && !isTspLive && rawY < -10.0)) {
+    // 5. Inferior Vena Cava (IVC) — active in inferior RA so Anterior/Inferior A/P tilt sweeps smoothly into IVC!
+    if (forLandmarkScan || (curStation === 'ra_venous' && rawY < (isTspLive ? -15.0 : -10.0))) {
       const ivcCap = sdCapsule3D(x, y, z, -0.5, -16.0, -3.5, -0.6, -98.0, -5.8, 12.0);
       commitHitFast(StructureId.IVC, ivcCap.dist, 1.75, ivcCap.nx, ivcCap.ny, ivcCap.nz, 0.44, true, 14.0, StructureId.RA_CAVITY, 4.2);
       if (ivcCap.dist < -1.9) {
@@ -1115,15 +1248,15 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
 
     // 2. Right Atrial Appendage (RAA) & Comb-Like Pectinate Muscles
-    if (rawY > 4.0 && rawZ > 6.0 && (forLandmarkScan || (!isRvotLive && !isVentricularRvLive && !isTspLive && rawX < 6.0))) {
+    if (rawY > 4.0 && rawZ > 6.0 && (forLandmarkScan || (curStation === 'ra_venous' && !isTspLive && rawX < 6.0))) {
       const raaEll1 = sdEllipsoid3D(x, y, z, 1.8, 20.2, 25.2, 13.5, 12.5, 14.0);
       const raaEll2 = sdEllipsoid3D(x, y, z, -11.0, 19.0, 24.0, 14.0, 12.5, 14.0);
       const raaBaseDist = Math.min(raaEll1.dist, raaEll2.dist);
       if (raaBaseDist <= 5.5) {
         const raaN = raaEll1.dist < raaEll2.dist ? raaEll1 : raaEll2;
-        const raaDist = forLandmarkScan ? raaBaseDist : raaBaseDist + (M_warpHetero - 0.5) * 0.45;
+        const raaDist = forLandmarkScan ? raaBaseDist : raaBaseDist + (M_warpHetero - 0.5) * 1.35;
         if (raaDist <= 3.5) {
-          const pectinateMod = 0.46 + 0.18 * M_warpHetero;
+          const pectinateMod = 0.44 + 0.22 * M_warpHetero;
           if (forLandmarkScan) {
             commitHitFast(StructureId.RAA_PECTINATES, Math.abs(raaBaseDist), 2.6, raaN.nx, raaN.ny, raaN.nz, pectinateMod, false);
           } else {
@@ -1134,26 +1267,26 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
 
     // 3. Crista Terminalis
-    if (rawX < 8.0 && rawZ > 2.0 && !isRvotLive && !isVentricularRvLive && !isTspLive) {
+    if (rawX < 8.0 && rawZ > 2.0 && (forLandmarkScan || (curStation === 'ra_venous' && !isTspLive))) {
       const ctCap1 = sdCapsule3D(vx, vy, vz, -2.9, 26.0, 13.8, -8.5, -12.0, 10.0, forLandmarkScan ? 3.8 : 2.2);
       const ctCap2 = sdCapsule3D(vx, vy, vz, -12.0, 24.0, 16.0, 2.5, 28.0, 8.0, forLandmarkScan ? 3.6 : 2.1);
       const ctBest = ctCap1.dist < ctCap2.dist ? ctCap1 : ctCap2;
-      commitHitFast(StructureId.CRISTA_TERMINALIS, ctBest.dist, forLandmarkScan ? 1.6 : 1.0, ctBest.nx, ctBest.ny, ctBest.nz, 0.64, false);
+      commitHitFast(StructureId.CRISTA_TERMINALIS, ctBest.dist, forLandmarkScan ? 1.6 : 1.0, ctBest.nx, ctBest.ny, ctBest.nz, 0.60, false);
     }
 
-    // 6, 7, 8, 9, 10: Eustachian, CTI, CS Ostium, Thebesian, Koch (inferior/posterior RA)
-    if (rawY < 8.0 && !isTspLive && !isRvotLive && !isVentricularRvLive && !isLeftPvViewLive) {
+    // 6, 7, 8, 9, 10: Eustachian, CTI, CS Ostium, Thebesian, Koch (inferior/posterior RA — reachable when tilting anteriorly/inferiorly!)
+    if (forLandmarkScan || (!isTspLive && rawY < 8.0 && curStation === 'ra_venous' && !isLeftPvViewLive)) {
       const eustCap = sdCapsule3D(vx, vy, vz, -4.0, -18.8, -2.0, 10.5, -17.5, 4.5, forLandmarkScan ? 3.6 : 1.9);
-      commitHitFast(StructureId.EUSTACHIAN_RIDGE, eustCap.dist, forLandmarkScan ? 1.6 : 0.85, eustCap.nx, eustCap.ny, eustCap.nz, 0.68, false);
+      commitHitFast(StructureId.EUSTACHIAN_RIDGE, eustCap.dist, forLandmarkScan ? 1.6 : 0.85, eustCap.nx, eustCap.ny, eustCap.nz, 0.62, false);
 
       const ctiCap = sdCapsule3D(vx, vy, vz, 2.0, -23.5, 4.0, 18.0, -21.0, 19.0, forLandmarkScan ? 4.2 : 2.8);
-      commitHitFast(StructureId.CTI_FLOOR, ctiCap.dist, forLandmarkScan ? 1.8 : 1.25, ctiCap.nx, ctiCap.ny, ctiCap.nz, 0.56, false);
+      commitHitFast(StructureId.CTI_FLOOR, ctiCap.dist, forLandmarkScan ? 1.8 : 1.25, ctiCap.nx, ctiCap.ny, ctiCap.nz, 0.52, false);
 
       if (forLandmarkScan || rawZ < 6.0) {
         const csCap1 = sdCapsule3D(x, y, z, 11.5, -13.0, 4.5, 18.5, -12.7, -8.5, 5.4);
         const csCap2 = sdCapsule3D(x, y, z, 18.5, -12.7, -8.5, 36.0, -10.5, -16.0, 4.8);
         const csBest = csCap1.dist < csCap2.dist ? csCap1 : csCap2;
-        commitHitFast(StructureId.CORONARY_SINUS_OSTIUM, csBest.dist, 1.45, csBest.nx, csBest.ny, csBest.nz, 0.48, true, 6.0, StructureId.RA_CAVITY, 4.0);
+        commitHitFast(StructureId.CORONARY_SINUS_OSTIUM, csBest.dist, 1.45, csBest.nx, csBest.ny, csBest.nz, 0.46, true, 6.0, StructureId.RA_CAVITY, 4.0);
         if (csBest.dist < -1.4) {
           flowVx = -28.0;
           flowVy = 10.0;
@@ -1164,7 +1297,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
       const thebEll = sdEllipsoid3D(vx, vy, vz, 15.5, -13.5, 1.5, 4.8, 3.8, 6.5);
       const thebEll2 = sdEllipsoid3D(vx, vy, vz, 16.5, -13.2, -5.8, 4.5, 3.8, 4.5);
       const thebBest = thebEll.dist < thebEll2.dist ? thebEll : thebEll2;
-      commitHitFast(StructureId.THEBESIAN_VALVE, thebBest.dist, forLandmarkScan ? 1.4 : 0.75, thebBest.nx, thebBest.ny, thebBest.nz, 0.66, false);
+      commitHitFast(StructureId.THEBESIAN_VALVE, thebBest.dist, forLandmarkScan ? 1.4 : 0.75, thebBest.nx, thebBest.ny, thebBest.nz, 0.60, false);
 
       const kochCap = sdCapsule3D(vx, vy, vz, 15.0, -9.0, 2.0, 25.2, 2.9, 4.3, forLandmarkScan ? 4.2 : 2.5);
       if (forLandmarkScan) {
@@ -1172,7 +1305,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
         const kochBest = kochEll.dist < kochCap.dist ? kochEll : kochCap;
         commitHitFast(StructureId.TRIANGLE_OF_KOCH_HIS, kochBest.dist, 1.5, kochBest.nx, kochBest.ny, kochBest.nz, 0.62, false);
       } else {
-        commitHitFast(StructureId.TRIANGLE_OF_KOCH_HIS, kochCap.dist, 1.0, kochCap.nx, kochCap.ny, kochCap.nz, 0.58, false);
+        commitHitFast(StructureId.TRIANGLE_OF_KOCH_HIS, kochCap.dist, 1.0, kochCap.nx, kochCap.ny, kochCap.nz, 0.54, false);
       }
     }
 
@@ -1203,28 +1336,34 @@ function evaluateAnalyticalCardiacAndDeviceField(
       const infLimbus = sdCapsule3D(x, y, z, 11.5, -4.5, 1.5, 9.3, -4.0, -10.5, 4.6);
       const limbusBest = supLimbus.dist < infLimbus.dist ? supLimbus : infLimbus;
       commitHitFast(StructureId.IAS_LIMBUS, limbusBest.dist, 1.8, limbusBest.nx, limbusBest.ny, limbusBest.nz, 0.86, false);
-    } else if (!isRvotLive && !isVentricularRvLive && !isLeftPvViewLive && rawX > 14.0 && rawX < 38.0 && rawZ < 4.0 && rawZ > -22.0) {
+    } else if (curStation === 'ra_venous' && wLeftPv < 0.65 && rawX > 12.0 && rawX < 62.0 && rawZ < 6.0 && rawZ > -26.0) {
       // Live B-mode Continuous Interatrial Septum Partition & Tented Fossa Ovalis (`zf_13`, `zf_14`, `wm_01..wm_03`)
-      if (iasRadialInPlane <= 8.8 && Math.abs(iasPlaneDist) <= 0.72) {
-        commitHitFast(StructureId.FOSSA_OVALIS, Math.abs(iasPlaneDist), 0.62, iasNx, iasNy, iasNz, 0.78, false);
+      const pvAtten = 1.0 - wLeftPv;
+      if (iasRadialInPlane <= 6.8 && Math.abs(iasPlaneDist) <= 0.64 * pvAtten) {
+        commitHitFast(StructureId.FOSSA_OVALIS, Math.abs(iasPlaneDist), 0.56 * pvAtten, iasNx, iasNy, iasNz, 0.84, false);
         if (tentMm > 2.0 && Math.abs(iasPlaneDist) < 2.2) {
           flowVx = 58.0 * iasNx;
           flowVy = 12.0;
           flowVz = 58.0 * iasNz;
         }
-      } else if (iasRadialInPlane > 8.8 && iasRadialInPlane <= 19.2) {
-        // Continuous muscular Superior & Inferior Limbus rim tapering smoothly into the thin Fossa Ovalis membrane
-        const limbusT = Math.min(1.0, (iasRadialInPlane - 8.8) / 10.4);
-        const halfThick = 0.68 + 1.10 * Math.sin(limbusT * Math.PI);
-        if (Math.abs(iasPlaneDist) <= halfThick) {
+      } else if (iasRadialInPlane > 6.8 && iasRadialInPlane <= 32.0) {
+        // Continuous, smoothly tapering muscular Superior Limbus (`dyFoLive > 0`, 1-3 o'clock in `14_kour`)
+        // and Inferior Limbus (`dyFoLive <= 0`, 8:30-10:30) without any detached ball pinch!
+        const rimRamp = smoothstep01(6.8, 14.5, iasRadialInPlane);
+        const outerTaper = 1.0 - 0.30 * smoothstep01(22.0, 32.0, iasRadialInPlane);
+        const isSupLimbus = dyFoLive > 0.0;
+        const rimThick = (isSupLimbus ? 2.15 : 1.65) * rimRamp * outerTaper;
+        const halfThick = (0.62 + rimThick) * pvAtten;
+        const shiftedPlaneDist = isSupLimbus ? iasPlaneDist + 0.32 * rimThick : iasPlaneDist;
+        if (Math.abs(shiftedPlaneDist) <= halfThick) {
           commitHitFast(
             StructureId.IAS_LIMBUS,
-            Math.abs(iasPlaneDist),
-            halfThick,
+            Math.abs(shiftedPlaneDist) - 0.45 * rimThick,
+            0.62 * pvAtten + 0.55 * rimThick,
             iasNx,
             iasNy,
             iasNz,
-            0.48 + 0.10 * Math.sin(limbusT * Math.PI),
+            0.52 + 0.14 * rimRamp,
             false
           );
         }
@@ -1236,69 +1375,123 @@ function evaluateAnalyticalCardiacAndDeviceField(
   // D. TRICUSPID VALVE, RIGHT VENTRICLE, RVOT & PULMONARY TREE (IDs 13..21)
   // ============================================================================
   let rvEllDist = 100.0;
-  if (forLandmarkScan || (!isLaLive && !isTspLive && !isLeftPvViewLive)) {
-    const tvCurveSag = !forLandmarkScan && rawY < 4.0 && rawZ > 12.0 ? 0.55 * (M_warpHetero - 0.5) : 0.0;
+  if (forLandmarkScan || (!isLaLive && wLeftPv < 0.75 && (!isTspLive || rawZ > 9.0))) {
+    const tvCurveSag = !forLandmarkScan && rawY < 4.0 && rawZ > 12.0 ? 0.65 * (M_warpHetero - 0.5) : 0.0;
 
     // 16. Right Ventricle (RV) Inflow & Trabeculated Cavity (evaluated BEFORE TV leaflets so the TV orifice is carved open!)
-    if (forLandmarkScan || !isHighRvotLive) {
+    if (forLandmarkScan || wHighRvot < 0.85) {
       let rvEllBase = forLandmarkScan
         ? sdEllipsoid3D(x, y, z, 33.1, -2.0, 27.0, 22.0 * rvContract, 26.0 * rvContract, 22.0 * rvContract)
-        : sdEllipsoid3D(x, y, z, 33.5, -10.5, 27.0, 20.0 * rvContract, 15.5 * rvContract, 20.5 * rvContract);
+        : sdEllipsoid3D(x, y, z, 35.0, -9.5, 30.5, 22.5 * rvContract, 18.5 * rvContract, 23.5 * rvContract);
+      let modVentObj: { dist: number; nx: number; ny: number; nz: number } | null = null;
+      let rvPapVentObj: { dist: number; nx: number; ny: number; nz: number } | null = null;
       if (!forLandmarkScan) {
-        if (isVentricularRvLive) {
+        if (wVentRv > 0.35) {
           // In ventricular RV views (`zf_06..zf_09`), unite the near-field RV inflow with the anterior-apical RV body
-          const rvNearEll = sdEllipsoid3D(x, y, z, 31.0, -8.5, 30.0, 19.5 * rvContract, 17.5 * rvContract, 19.5 * rvContract);
-          const rvApexEll = sdEllipsoid3D(x, y, z, 43.0, -11.5, 45.5, 23.0 * rvContract, 21.0 * rvContract, 25.5 * rvContract);
+          const rvNearEll = sdEllipsoid3D(x, y, z, 31.0, -8.5, 30.0, 20.0 * rvContract, 18.5 * rvContract, 20.0 * rvContract);
+          const rvApexEll = sdEllipsoid3D(x, y, z, 46.0, -11.5, 48.0, 24.5 * rvContract, 23.0 * rvContract, 27.0 * rvContract);
           if (rvNearEll.dist < rvEllBase.dist) rvEllBase = rvNearEll;
           if (rvApexEll.dist < rvEllBase.dist) rvEllBase = rvApexEll;
+
+          if (wVentRv > 0.45 && rawX > 30.0 && rawZ > 30.0) {
+            // Solid, curved, wall-to-wall muscular Moderator Band bridging from 3 mm deep in the septal/inferior RV wall
+            // continuously into the anterior/right RV free wall (zero hollow `=` stripe and zero floating wall gap! Ref `02_ehra` Panel A)
+            const modArc = 1.6 * Math.cos(Math.min(1.5, Math.abs(vy + 7.0) / 16.5));
+            const modFlare = 1.15 * Math.pow(Math.min(1.2, Math.abs(vy + 7.0) / 17.5), 2);
+            modVentObj = sdCapsule3D(
+              vx + modArc * 0.50,
+              vy,
+              vz + modArc * 0.60,
+              44.5,
+              -28.5,
+              58.5,
+              55.5,
+              15.5,
+              53.5,
+              0.92 + 0.65 * modFlare
+            );
+            // Solid Anterior RV Papillary Muscle anchored 3 mm deep into the RV wall (`02_ehra` Panel A)
+            const papLeft = sdCapsule3D(vx, vy, vz, 33.5, -29.0, 44.5, 39.2, -15.5, 41.2, 1.55);
+            const papRight = sdCapsule3D(vx, vy, vz, 49.5, 7.5, 53.5, 56.0, 16.0, 52.5, 1.45);
+            rvPapVentObj = papLeft.dist < papRight.dist ? papLeft : papRight;
+          }
         } else {
           // Carve open the Tricuspid Valve orifice channel between RA and RV (`zf_02` Blocker D)
-          const tvChannel = sdCapsule3D(x, y, z, 11.5, -2.5, 13.5, 28.5, -9.5, 25.0, 9.2 * (0.84 + 0.16 * diaEnv));
+          const tvChannel = sdCapsule3D(x, y, z, 11.5, -2.5, 13.5, 29.5, -9.5, 26.5, 10.2 * (0.86 + 0.14 * diaEnv));
           if (tvChannel.dist < rvEllBase.dist) {
             rvEllBase = tvChannel;
           }
         }
       }
       rvEllDist = rvEllBase.dist;
-      const rvTrabeculae = !forLandmarkScan && rawX > 32.0 && Math.abs(rvEllDist) < 4.5 ? (M_warpHetero - 0.5) * 0.55 : 0.0;
+      const rvTrabeculae =
+        !forLandmarkScan && rawX > 28.0 && Math.abs(rvEllDist) < 5.0
+          ? (M_warpHetero - 0.5) * 1.45
+          : 0.0;
       let rvSdf = rvEllDist + rvTrabeculae;
-      if (tvOrificeEll && tvOrificeEll.dist < -0.2 && Math.abs(rvSdf) <= 2.0) {
-        // Suppress RV_CAVITY wall across the open Tricuspid Valve orifice (`zf_02` Blocker D)
-        rvSdf = Math.min(rvSdf, tvOrificeEll.dist - 2.15);
+      if (!forLandmarkScan && tvOrificeEll) {
+        // C1-smooth CSG carving of RV_CAVITY wall across the open Tricuspid Valve orifice and RA chamber (`zf_02` Blocker D)
+        rvSdf -= 5.2 * Math.max(smoothstep01(1.2, -2.2, tvOrificeEll.dist), smoothstep01(0.5, -2.2, raOpenSdf));
       }
       commitHitFast(
         StructureId.RV_CAVITY,
         rvSdf,
-        forLandmarkScan ? 3.0 : 2.0,
+        forLandmarkScan ? 3.0 : 2.1,
         rvEllBase.nx,
         rvEllBase.ny,
         rvEllBase.nz,
-        0.44,
+        0.42,
         true,
         24.0,
         StructureId.RA_CAVITY,
-        5.2
+        5.5
       );
+
+      if (modVentObj) {
+        commitHitFast(StructureId.MODERATOR_BAND, modVentObj.dist, 1.15, modVentObj.nx, modVentObj.ny, modVentObj.nz, 0.42, false);
+      }
+      if (rvPapVentObj) {
+        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPapVentObj.dist, 1.15, rvPapVentObj.nx, rvPapVentObj.ny, rvPapVentObj.nz, 0.42, false);
+      }
     }
 
-    // 13, 14, 15. Tricuspid Valve Leaflets (Anterior, Septal, Posterior — suspended across the open TV orifice!)
-    if (rawY < 6.0 && rawZ > 10.0 && !isVentricularRvLive) {
-      const tvAnt1 = forLandmarkScan
-        ? sdCapsule3D(rawX, rawY, rawZ, 17.0, -3.0, 29.0, 25.0 + tvOpenShift, -10.0 - tvOpenShift * 0.5, 24.5, 3.2)
-        : sdCapsule3D(vx, vy + tvCurveSag, vz, 16.5, 0.2, 22.0, 23.2 + tvOpenShift * 0.45, -4.5 + tvOpenShift * 0.25, 28.2, 0.78);
-      const tvAnt2 = sdCapsule3D(vx, vy, vz, -8.5, -2.0, 22.5, 17.0, -3.0, 29.0, forLandmarkScan ? 3.0 : 0.75);
-      const tvAnt = tvAnt1.dist < tvAnt2.dist ? tvAnt1 : tvAnt2;
-      commitHitFast(StructureId.TRICUSPID_VALVE_ANT, tvAnt.dist, forLandmarkScan ? 1.35 : 0.44, tvAnt.nx, tvAnt.ny, tvAnt.nz, 0.74, false);
+    // 13, 14, 15. Tricuspid Valve Leaflets (Thin, delicate fibrous leaflets anchored to the tricuspid annulus, Ref `05_ehra` & `15_nair`!)
+    if (rawY < 6.0 && rawZ > 10.0 && wVentRv < 0.75) {
+      if (forLandmarkScan) {
+        const tvAnt1 = sdCapsule3D(rawX, rawY, rawZ, 17.0, -3.0, 29.0, 25.0 + tvOpenShift, -10.0 - tvOpenShift * 0.5, 24.5, 3.2);
+        const tvAnt2 = sdCapsule3D(vx, vy, vz, -8.5, -2.0, 22.5, 17.0, -3.0, 29.0, 3.0);
+        const tvAnt = tvAnt1.dist < tvAnt2.dist ? tvAnt1 : tvAnt2;
+        commitHitFast(StructureId.TRICUSPID_VALVE_ANT, tvAnt.dist, 1.35, tvAnt.nx, tvAnt.ny, tvAnt.nz, 0.68, false);
 
-      const tvSept = forLandmarkScan
-        ? sdCapsule3D(rawX, rawY, rawZ, 19.0, -5.0, 14.0, 26.0 - tvOpenShift * 0.4, -10.5, 19.5 + tvOpenShift * 0.4, 3.2)
-        : sdCapsule3D(vx, vy - tvCurveSag * 0.6, vz, 16.2, -12.5, 17.8, 22.2 - tvOpenShift * 0.35, -8.5 - tvOpenShift * 0.25, 23.8 + tvOpenShift * 0.35, 0.78);
-      commitHitFast(StructureId.TRICUSPID_VALVE_SEPT, tvSept.dist, forLandmarkScan ? 1.35 : 0.44, tvSept.nx, tvSept.ny, tvSept.nz, 0.74, false);
+        const tvSept = sdCapsule3D(rawX, rawY, rawZ, 19.0, -5.0, 14.0, 26.0 - tvOpenShift * 0.4, -10.5, 19.5 + tvOpenShift * 0.4, 3.2);
+        commitHitFast(StructureId.TRICUSPID_VALVE_SEPT, tvSept.dist, 1.35, tvSept.nx, tvSept.ny, tvSept.nz, 0.68, false);
 
-      const tvPost = forLandmarkScan
-        ? sdCapsule3D(rawX, rawY, rawZ, 19.0, -17.0, 21.0, 26.5, -13.0 + tvOpenShift * 0.4, 22.5, 3.2)
-        : sdCapsule3D(vx, vy, vz, 18.0, -17.5, 19.0, 24.0, -13.0 + tvOpenShift * 0.35, 22.0, 0.68);
-      commitHitFast(StructureId.TRICUSPID_VALVE_POST, tvPost.dist, forLandmarkScan ? 1.35 : 0.42, tvPost.nx, tvPost.ny, tvPost.nz, 0.70, false);
+        const tvPost = sdCapsule3D(rawX, rawY, rawZ, 19.0, -17.0, 21.0, 26.5, -13.0 + tvOpenShift * 0.4, 22.5, 3.2);
+        commitHitFast(StructureId.TRICUSPID_VALVE_POST, tvPost.dist, 1.35, tvPost.nx, tvPost.ny, tvPost.nz, 0.65, false);
+      } else {
+        // Anterior TV Leaflet anchored directly into the left/anterior-inferior tricuspid annulus (`9:30–10:30`, `xLat ~ -12 mm`, exact `zf_02` slice plane `z = 1.3758 * x`)
+        const antTipX = 20.87 + tvOpenShift * 0.25;
+        const antTipY = -8.5 - tvOpenShift * 0.25;
+        const antTipZ = 28.72 + tvOpenShift * 0.34;
+        const tvAntLeaflet = sdCapsule3D(vx, vy - tvCurveSag * 0.35, vz, 14.70, -12.5, 20.23, antTipX, antTipY, antTipZ, 0.42);
+        const tvAntChordae = sdCapsule3D(vx, vy, vz, antTipX, antTipY, antTipZ, 24.70, -10.5, 33.98, 0.26);
+        const isAntChordae = tvAntChordae.dist < tvAntLeaflet.dist;
+        const tvAntLive = isAntChordae ? tvAntChordae : tvAntLeaflet;
+        commitHitFast(StructureId.TRICUSPID_VALVE_ANT, tvAntLive.dist, isAntChordae ? 0.28 : 0.36, tvAntLive.nx, tvAntLive.ny, tvAntLive.nz, isAntChordae ? 0.58 : 0.72, false);
+
+        // Septal TV Leaflet anchored directly into the septal tricuspid annulus adjacent to the Aortic Root wedge (`1:00–1:30`, `xLat ~ +2.5 mm`, exact `zf_02` slice plane `z = 1.3758 * x`)
+        const septTipX = 21.46 - tvOpenShift * 0.25;
+        const septTipY = -3.2 + tvOpenShift * 0.20;
+        const septTipZ = 29.53 - tvOpenShift * 0.34;
+        const tvSeptLeaflet = sdCapsule3D(vx, vy + tvCurveSag * 0.35, vz, 17.35, 2.5, 23.87, septTipX, septTipY, septTipZ, 0.40);
+        const tvSeptChordae = sdCapsule3D(vx, vy, vz, septTipX, septTipY, septTipZ, 24.99, -4.8, 34.38, 0.26);
+        const isSeptChordae = tvSeptChordae.dist < tvSeptLeaflet.dist;
+        const tvSeptLive = isSeptChordae ? tvSeptChordae : tvSeptLeaflet;
+        commitHitFast(StructureId.TRICUSPID_VALVE_SEPT, tvSeptLive.dist, isSeptChordae ? 0.28 : 0.36, tvSeptLive.nx, tvSeptLive.ny, tvSeptLive.nz, isSeptChordae ? 0.58 : 0.72, false);
+
+        const tvPostLive = sdCapsule3D(vx, vy, vz, 16.5, -16.8, 18.5, 23.5, -12.5 + tvOpenShift * 0.35, 22.0, 0.38);
+        commitHitFast(StructureId.TRICUSPID_VALVE_POST, tvPostLive.dist, 0.36, tvPostLive.nx, tvPostLive.ny, tvPostLive.nz, 0.72, false);
+      }
 
       // Diastolic Tricuspid Inflow / Systolic Regurgitant physiological Doppler velocity field
       const tvOrificeDist = Math.hypot(rawX - 22.0, rawY - -7.5, rawZ - 20.5);
@@ -1317,7 +1510,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
 
     // 17. Moderator Band & 18. RV Papillary Muscles (`zf_06` Blocker C1: transverse mid-apical bridge & wall-anchored mound)
-    if (rawX > 20.0 && rawY < 16.0 && (forLandmarkScan || !isHighRvotLive)) {
+    if (rawX > 20.0 && rawY < 16.0 && (forLandmarkScan || wHighRvot < 0.75)) {
       if (forLandmarkScan) {
         const modCap1 = sdCapsule3D(x, y, z, 27.0, -13.5, 26.5, 44.0, -18.5, 41.5, 3.8);
         const modCap2 = sdCapsule3D(x, y, z, 28.5, 6.5, 1.5, 36.5, -12.0, 24.5, 3.6);
@@ -1328,28 +1521,19 @@ function evaluateAnalyticalCardiacAndDeviceField(
         const rvPap2 = sdCapsule3D(x, y, z, 31.0, 10.0, 3.0, 39.0, -9.0, 24.0, 4.2);
         const rvPapBest = rvPap2.dist < rvPap1.dist ? rvPap2 : rvPap1;
         commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPapBest.dist, 1.5, rvPapBest.nx, rvPapBest.ny, rvPapBest.nz, 0.68, false);
-      } else if (isVentricularRvLive && rawX > 36.0 && rawZ > 36.0) {
-        // Curved muscular Moderator Band bridging wall-to-wall across mid-apical RV from septal wall to anterior free wall (`02_ehra` Panel B)
-        const modArc = 1.4 * Math.cos(Math.min(1.5, Math.abs(vy + 14.0) / 11.5));
-        const modVent = sdCapsule3D(vx + modArc * 0.6, vy, vz + modArc * 0.7, 44.5, -31.5, 58.5, 53.6, 3.2, 56.8, 2.05);
-        commitHitFast(StructureId.MODERATOR_BAND, modVent.dist, 0.85, modVent.nx, modVent.ny, modVent.nz, 0.56, false);
+      } else if (wVentRv <= 0.45 && rawX > 30.0 && rawZ > 28.0) {
+        const modCap1 = sdCapsule3D(x, y, z, 32.0, -14.5, 31.0, 44.0, -18.5, 41.5, 2.0);
+        commitHitFast(StructureId.MODERATOR_BAND, modCap1.dist, 0.80, modCap1.nx, modCap1.ny, modCap1.nz, 0.44, false);
 
-        // Rounded conical RV Papillary Muscle belly anchored directly into the anterior/right RV wall at r = 33..36 mm
-        const rvPapVent = sdEllipsoid3D(vx, vy, vz, 46.8, 5.2, 48.8, 4.4, 5.0, 4.4);
-        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPapVent.dist, 0.90, rvPapVent.nx, rvPapVent.ny, rvPapVent.nz, 0.54, false);
-      } else if (!isVentricularRvLive && rawX > 30.0 && rawZ > 28.0) {
-        const modCap1 = sdCapsule3D(x, y, z, 32.0, -14.5, 31.0, 44.0, -18.5, 41.5, 2.2);
-        commitHitFast(StructureId.MODERATOR_BAND, modCap1.dist, 0.85, modCap1.nx, modCap1.ny, modCap1.nz, 0.56, false);
-
-        const rvPap1 = sdCapsule3D(x, y, z, 36.5, -13.5, 35.0, 44.7, -2.5, 38.5, 2.6);
-        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPap1.dist, 0.85, rvPap1.nx, rvPap1.ny, rvPap1.nz, 0.54, false);
+        const rvPap1 = sdCapsule3D(x, y, z, 36.5, -13.5, 35.0, 44.7, -2.5, 38.5, 2.4);
+        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPap1.dist, 0.80, rvPap1.nx, rvPap1.ny, rvPap1.nz, 0.44, false);
       }
     }
 
-    // 19. RVOT Infundibulum & 20. Pulmonic Valve (evaluated without hard rawY planar cutoff!)
+    // 19. RVOT Infundibulum & 20. Pulmonic Valve (smoothly blended between basal and high RVOT)
     const rvotCap = forLandmarkScan
       ? sdCapsule3D(x, y, z, 34.0, 12.0, 25.0, 44.0, 30.0, 25.5, 11.5)
-      : isHighRvotLive
+      : wHighRvot > 0.5
         ? sdEllipsoid3D(x, y, z, 26.5, 14.0, 11.5, 13.5, 12.5, 13.5)
         : sdCapsule3D(x, y, z, 36.5, 15.0, 38.0, 44.0, 26.0, 44.0, 11.5);
     commitHitFast(
@@ -1413,7 +1597,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
         StructureId.RVOT_INFUNDIBULUM,
         4.2
       );
-    } else if (!isHighRvotLive) {
+    } else if (wHighRvot < 0.65) {
       const mpaCap = sdCapsule3D(x, y, z, 43.5, 30.0, 24.5, 42.0, 45.0, 14.0, 11.0);
       commitHitFast(
         StructureId.MAIN_PA_LPA_RPA,
@@ -1465,22 +1649,20 @@ function evaluateAnalyticalCardiacAndDeviceField(
     // left AV groove between LAA and Mitral Valve (Ref `12_ehra` & `04_watchman`) without intruding AoV Y-star
     const lcxGroove = sdCapsule3D(vx, vy, vz, 43.0, 11.5, -9.5, 48.5, 15.0, -3.5, 2.1);
     commitHitFast(StructureId.CORONARY_ARTERIES_LMCA_RCA_LCX, lcxGroove.dist, 0.75, lcxGroove.nx, lcxGroove.ny, lcxGroove.nz, 0.64, true, 2.2, 0, 2.2);
-  } else if (!isTspLive && !isVentricularRvLive && !isLeftPvViewLive) {
+  } else if (wLeftPv < 0.70 && (!isTspLive || rawZ > 11.0) && (wVentRv < 0.65 || rawY > 11.0)) {
     // Live B-mode Trefoil Aortic Root & 3-Cusp "Mercedes-Benz" Short-Axis Star (Ref `01` Panel A & `02` Panel D):
-    // - In `rv_outflow` (`zf_10` AoV Short-Axis): centered at (38.5, 20.5, -2.5) with radius 12.5 mm (depth r = 22..47 mm,
-    //   leaving r = 0..21.5 mm as a dark RVOT near-field lumen!).
-    // - In `ra_venous` (`zf_02` Home View): centered dead-on the Home View sector plane at (22.5, 14.0, 24.0) with radius 10.4 mm,
-    //   producing a hollow dark Aortic Root lumen with crisp AoV leaflets between RA, RV, and RVOT!
-    const rootCx = isHighRvotLive ? 38.5 : 22.5;
-    const rootCy = isHighRvotLive ? 20.5 : 14.0;
-    const rootCz = isHighRvotLive ? -2.5 : 24.0;
-    const rootRad = isHighRvotLive ? 12.5 : 10.4;
+    // Smoothly interpolated by wHighRvot so sweeping from RA/RV to RVOT (or tilting superiorly/anteriorly) is continuous!
+    const rootBlend = curStation === 'rv_outflow' ? Math.max(0.35, wHighRvot) : 0.0;
+    const rootCx = 22.5 + (38.5 - 22.5) * rootBlend;
+    const rootCy = 14.0 + (20.5 - 14.0) * rootBlend;
+    const rootCz = 24.0 + (-2.5 - 24.0) * rootBlend;
+    const rootRad = 10.4 + (12.5 - 10.4) * rootBlend;
 
     const dRx = vx - rootCx;
     const dRy = vy - rootCy;
     const dRz = vz - rootCz;
     const phiRoot = Math.atan2(dRy, dRx * 0.72 - dRz * 0.69);
-    const sinusBulge = (isHighRvotLive ? 1.55 : 1.05) * Math.cos(3.0 * phiRoot);
+    const sinusBulge = (1.05 + 0.50 * rootBlend) * Math.cos(3.0 * phiRoot);
     const aoRootSphere = sdEllipsoid3D(
       x,
       y,
@@ -1510,7 +1692,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
     // Inside the trefoil Sinuses of Valsalva bulb: render the 3 thin echogenic coaptation arms of the
     // "Mercedes-Benz" star (separating RCC, NCC, LCC) and tag the 3 dark sinus pockets!
     if (aoRootSphere.dist < -1.35) {
-      const uR = isHighRvotLive ? dRx * 0.707 - dRz * 0.707 : dRz * 0.682 + dRx * 0.731;
+      const uR = rootBlend > 0.5 ? dRx * 0.707 - dRz * 0.707 : dRz * 0.682 + dRx * 0.731;
       const vR = dRy;
       const rInRoot = Math.hypot(uR, vR);
       const openGap = aovOpen * 0.75;
@@ -1518,24 +1700,29 @@ function evaluateAnalyticalCardiacAndDeviceField(
       const a1x = -0.574;
       const a1y = 0.819;
       const proj1 = uR * a1x + vR * a1y;
-      const perp1 = Math.abs(-uR * a1y + vR * a1x);
+      const curve1 = 0.028 * proj1 * proj1;
+      const perp1 = Math.abs(-uR * a1y + vR * a1x - curve1);
 
       const a2x = -0.574;
       const a2y = -0.819;
       const proj2 = uR * a2x + vR * a2y;
-      const perp2 = Math.abs(-uR * a2y + vR * a2x);
+      const curve2 = 0.028 * proj2 * proj2;
+      const perp2 = Math.abs(-uR * a2y + vR * a2x + curve2);
 
       const proj3 = uR;
-      const perp3 = Math.abs(vR);
+      const curve3 = 0.022 * proj3 * proj3;
+      const perp3 = Math.abs(vR - curve3);
 
       const maxArmR = rootRad - 0.6;
-      const leafletHalfThick = 0.56 - 0.14 * Math.min(1.0, rInRoot / Math.max(1.0, maxArmR));
+      const baseHalfThick = rootBlend > 0.5 ? 0.44 : 0.36;
+      const leafletHalfThick = baseHalfThick - 0.10 * Math.min(1.0, rInRoot / Math.max(1.0, maxArmR));
+      const cuspBs = rootBlend > 0.5 ? 0.68 : 0.62;
       if (proj1 >= openGap && rInRoot <= maxArmR && perp1 <= leafletHalfThick) {
-        commitHitFast(StructureId.AORTIC_VALVE_LCC, perp1, leafletHalfThick, -a1y, a1x, 0.2, 0.78, false);
+        commitHitFast(StructureId.AORTIC_VALVE_LCC, perp1, leafletHalfThick, -a1y, a1x, 0.2, cuspBs, false);
       } else if (proj2 >= openGap && rInRoot <= maxArmR && perp2 <= leafletHalfThick) {
-        commitHitFast(StructureId.AORTIC_VALVE_RCC, perp2, leafletHalfThick, -a2y, a2x, 0.2, 0.78, false);
+        commitHitFast(StructureId.AORTIC_VALVE_RCC, perp2, leafletHalfThick, -a2y, a2x, 0.2, cuspBs, false);
       } else if (proj3 >= openGap && rInRoot <= maxArmR && perp3 <= leafletHalfThick) {
-        commitHitFast(StructureId.AORTIC_VALVE_NCC, perp3, leafletHalfThick, 0.0, 1.0, 0.0, 0.78, false);
+        commitHitFast(StructureId.AORTIC_VALVE_NCC, perp3, leafletHalfThick, 0.0, 1.0, 0.0, cuspBs, false);
       } else if (M_bestBackscatter < 0.08) {
         if (uR < -1.2) {
           M_bestId = StructureId.AORTIC_VALVE_RCC;
@@ -1558,38 +1745,61 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
 
     // 26. Coronary Arteries (LMCA / LCx branching off LCC sinus in AoV Short-Axis `isHighRvotLive`)
-    if (isHighRvotLive && aoRootSphere.dist >= -0.8) {
+    if (wHighRvot > 0.4 && aoRootSphere.dist >= -0.8) {
       const lcxCap = sdCapsule3D(vx, vy, vz, 45.5, 26.5, -8.5, 53.5, 31.5, -13.5, 2.1);
-      commitHitFast(StructureId.CORONARY_ARTERIES_LMCA_RCA_LCX, lcxCap.dist, 0.75, lcxCap.nx, lcxCap.ny, lcxCap.nz, 0.64, true, 2.2, 0, 2.2);
+      commitHitFast(StructureId.CORONARY_ARTERIES_LMCA_RCA_LCX, lcxCap.dist, 0.75, lcxCap.nx, lcxCap.ny, lcxCap.nz, 0.60, true, 2.2, 0, 2.2);
     }
   }
 
   // ============================================================================
   // F. LEFT ATRIUM, LAA, COUMADIN RIDGE & PULMONARY VEINS (IDs 27..33)
   // ============================================================================
-  if (forLandmarkScan || isLaLive || isHighRvotLive || isTspLive || isLeftPvViewLive || (!isVentricularRvLive && rawZ < 4.0)) {
+  if (forLandmarkScan || isLaLive || wHighRvot > 0.35 || wTsp > 0.25 || wLeftPv > 0.25 || (wVentRv < 0.55 && rawZ < 4.0)) {
     // Pre-evaluate Left Pulmonary Veins (`LSPV` & `LIPV`) in posterior RA views (`zf_15` Blocker B)
     // so LA_CAVITY and LSPV/LIPV form a true seamless CSG union with wide-open venoatrial ostia!
-    const lspvCap = !isHighRvotLive && !isVentricularRvLive
+    const lspvCap = wHighRvot < 0.55 && wVentRv < 0.55 && !isTspLive
       ? forLandmarkScan
         ? sdCapsule3D(x, y, z, 42.0, 24.0, -18.0, 62.0, 39.0, -30.0, 7.8)
-        : isLaLive || isTspLive
+        : isLaLive
           ? sdCapsule3D(x, y, z, 38.5, 22.0, -15.5, 62.0, 39.0, -30.0, 7.8)
-          : isLeftPvViewLive
-            ? sdCapsule3D(x, y, z, 32.2, 19.6, -19.1, 52.1, 36.2, -30.7, 7.2)
+          : wLeftPv > 0.35
+            ? sdCapsule3D(
+                x,
+                y,
+                z,
+                35.5 * (1.0 - wLeftPv) + 33.87 * wLeftPv,
+                16.5 * (1.0 - wLeftPv) + 21.49 * wLeftPv,
+                -17.0 * (1.0 - wLeftPv) + -20.12 * wLeftPv,
+                60.5 * (1.0 - wLeftPv) + 60.92 * wLeftPv,
+                23.5 * (1.0 - wLeftPv) + 34.61 * wLeftPv,
+                -36.5 * (1.0 - wLeftPv) + -35.68 * wLeftPv,
+                8.2
+              )
             : sdCapsule3D(x, y, z, 35.5, 16.5, -17.0, 60.5, 23.5, -36.5, 7.8)
       : null;
-    const lipvCap = !isHighRvotLive && !isVentricularRvLive && !isTspLive
+    const lipvCap = wHighRvot < 0.55 && wVentRv < 0.55 && !isTspLive
       ? forLandmarkScan
         ? sdCapsule3D(x, y, z, 45.0, 8.0, -26.0, 65.5, 4.1, -40.3, 7.4)
-        : isLeftPvViewLive
-          ? sdCapsule3D(x, y, z, 34.7, 8.8, -20.3, 50.8, 3.2, -29.2, 6.6)
+        : wLeftPv > 0.35
+          ? sdCapsule3D(
+              x,
+              y,
+              z,
+              35.5 * (1.0 - wLeftPv) + 36.64 * wLeftPv,
+              9.5 * (1.0 - wLeftPv) + 6.66 * wLeftPv,
+              -17.0 * (1.0 - wLeftPv) + -21.29 * wLeftPv,
+              60.5 * (1.0 - wLeftPv) + 63.20 * wLeftPv,
+              3.5 * (1.0 - wLeftPv) + 1.68 * wLeftPv,
+              -36.5 * (1.0 - wLeftPv) + -36.11 * wLeftPv,
+              7.6
+            )
           : sdCapsule3D(x, y, z, 35.5, 9.5, -17.0, 60.5, 3.5, -36.5, 7.4)
       : null;
 
     // 27. Left Atrium (LA) Cavity & Posterior/Roof/Vestibule Wall (evaluated without hard Cartesian plane cutoffs!)
     const laEll = sdEllipsoid3D(x, y, z, 31.0, 16.0, -18.0, 22.0 * raContract, 20.0 * raContract, 20.0 * raContract);
     let laActiveSdf = laEll.dist;
+    let laOpenPvSdf = 100.0;
     if (forLandmarkScan) {
       commitHitFast(StructureId.LA_CAVITY, laEll.dist, 2.2, laEll.nx, laEll.ny, laEll.nz, 0.46, true, 22.0, 0, 4.2);
     } else if (isHighRvotLive) {
@@ -1598,49 +1808,52 @@ function evaluateAnalyticalCardiacAndDeviceField(
       laActiveSdf = laPostAo.dist;
       commitHitFast(StructureId.LA_CAVITY, laPostAo.dist, 1.65, laPostAo.nx, laPostAo.ny, laPostAo.nz, 0.42, true, 19.0, 0, 4.0);
     } else if (isTspLive) {
-      // In Fossa Ovalis TSP View (`zf_13`, `wm_02` Blocker A): wide, dark anechoic Left Atrium cavity strictly deep to the tented Fossa Ovalis
-      // with zero second circular LA roof line cutting across the tented V-cone!
-      const laTspEll = sdEllipsoid3D(x, y, z, 41.5, 10.5 + tspShiftY, -14.5 + tspShiftZ, 22.5 * raContract, 23.0 * raContract, 19.5 * raContract);
-      let laTspSdf = Math.max(laTspEll.dist, -(iasPlaneDist + 1.00));
-      if (iasRadialInPlane <= 19.5 && iasPlaneDist <= 3.2 && Math.abs(laTspSdf) <= 1.65) {
-        laTspSdf = 4.0;
-      }
+      // In Fossa Ovalis TSP View (`zf_13`, `wm_02` Ref `14_kour`): deep, open Left Atrium cavity spanning the entire
+      // Inferior Limbus, V-tented Fossa Ovalis, and Superior Limbus (`y = -28..+28 mm`)
+      const laTspEll = sdEllipsoid3D(
+        x,
+        y,
+        z,
+        40.0,
+        0.0 + tspShiftY,
+        -12.0 + tspShiftZ,
+        31.5 * raContract,
+        34.0 * raContract,
+        31.0 * raContract
+      );
+      const rimRampLa = smoothstep01(6.5, 14.5, iasRadialInPlane);
+      const foThinOffsetLa = 0.25 + (dyFoLive > 0.0 ? 1.55 : 1.15) * rimRampLa;
+      const laTspSdf = Math.max(laTspEll.dist, -(iasPlaneDist - foThinOffsetLa));
+      const laWallThickTsp = Math.abs(iasPlaneDist) < 5.0 ? 0.45 + 1.20 * rimRampLa : 1.65;
       laActiveSdf = laTspSdf;
-      commitHitFast(StructureId.LA_CAVITY, laTspSdf, 1.65, laTspEll.nx, laTspEll.ny, laTspEll.nz, 0.42, true, 24.0, 0, 4.2);
+      commitHitFast(StructureId.LA_CAVITY, laTspSdf, laWallThickTsp, laTspEll.nx, laTspEll.ny, laTspEll.nz, 0.42, true, 28.0, 0, 4.8);
     } else if (isLeftPvViewLive) {
-      // In Left Pulmonary Veins View (`zf_15` Blocker B): continuous anechoic LA chamber from near-field to the open LSPV/LIPV ostia!
-      const laLeftPvEll = sdEllipsoid3D(x, y, z, 22.1, 14.8, -13.3, 21.5 * raContract, 20.5 * raContract, 16.5 * raContract);
-      let laLeftPvSdf = laLeftPvEll.dist;
+      // In Left Pulmonary Veins View (`zf_15` Blocker B): wide-open Left Atrium chamber (`r = 14..54 mm`)
+      // forming a true seamless CSG union with the branching LSPV and LIPV ostia (`r = 42..76 mm`)!
+      const laLeftPvEll = sdEllipsoid3D(x, y, z, 27.51, 12.47, -16.30, 22.5 * raContract, 21.5 * raContract, 21.0 * raContract);
+      laOpenPvSdf = laLeftPvEll.dist;
       const pvMinDist = Math.min(lspvCap ? lspvCap.dist : 100.0, lipvCap ? lipvCap.dist : 100.0);
-      if (pvMinDist < -0.25 && Math.abs(laLeftPvSdf) <= 1.60) {
-        laLeftPvSdf = Math.min(laLeftPvSdf, pvMinDist - 1.65);
-      }
+      const laLeftPvSdf = Math.min(laLeftPvEll.dist, pvMinDist);
       laActiveSdf = laLeftPvSdf;
-      commitHitFast(StructureId.LA_CAVITY, laLeftPvSdf, 1.60, laLeftPvEll.nx, laLeftPvEll.ny, laLeftPvEll.nz, 0.42, true, 24.0, 0, 4.0);
+      commitHitFast(StructureId.LA_CAVITY, laLeftPvSdf, 1.60, laLeftPvEll.nx, laLeftPvEll.ny, laLeftPvEll.nz, 0.42, true, 25.0, StructureId.RA_CAVITY, 4.0);
     } else if (isLaLive) {
-      // In LA Transseptal views (`wm_04..wm_10`): smooth LA body encompassing the transseptal catheter and opening into LAA/PVs
-      const laTransEll = sdEllipsoid3D(x, y, z, 34.5, 16.5, -5.5, 23.5 * raContract, 22.0 * raContract, 21.5 * raContract);
+      // In LA Transseptal views (`wm_04..wm_10`): smooth LA body encompassing the transseptal catheter and funneling into the LAA ostium
+      const laTransEll = sdEllipsoid3D(x, y, z, 28.5, 11.5, -5.5, 19.5 * raContract, 18.5 * raContract, 18.5 * raContract);
       const laUnion = laEll.dist < laTransEll.dist ? laEll : laTransEll;
       laActiveSdf = laUnion.dist;
-      commitHitFast(StructureId.LA_CAVITY, laUnion.dist, 1.65, laUnion.nx, laUnion.ny, laUnion.nz, 0.42, true, 25.0, 0, 4.2);
+      commitHitFast(StructureId.LA_CAVITY, laUnion.dist, 1.65, laUnion.nx, laUnion.ny, laUnion.nz, 0.42, true, 23.0, 0, 4.5);
     } else {
       const laVestEll = sdEllipsoid3D(x, y, z, 33.5, 6.5, -8.5, 17.5 * raContract, 16.5 * raContract, 11.5 * raContract);
       const laUnion = laEll.dist < laVestEll.dist ? laEll : laVestEll;
-      let laPostSdf = Math.max(laUnion.dist, -(iasPlaneDist + 1.00));
-      if (iasRadialInPlane <= 19.5 && iasPlaneDist <= 3.0 && Math.abs(laPostSdf) <= 1.60) {
-        laPostSdf = 4.0;
-      }
+      laOpenPvSdf = laUnion.dist;
       const pvMinDist = Math.min(lspvCap ? lspvCap.dist : 100.0, lipvCap ? lipvCap.dist : 100.0);
-      if (pvMinDist < -0.25 && Math.abs(laPostSdf) <= 1.60) {
-        // Suppress LA_CAVITY posterior wall across the open LSPV and LIPV ostia (`zf_15` Blocker B)
-        laPostSdf = Math.min(laPostSdf, pvMinDist - 1.65);
-      }
+      const laPostSdf = Math.min(Math.max(laUnion.dist, -(iasPlaneDist + 1.00)), pvMinDist);
       laActiveSdf = laPostSdf;
       commitHitFast(StructureId.LA_CAVITY, laPostSdf, 1.60, laUnion.nx, laUnion.ny, laUnion.nz, 0.42, true, 24.0, 0, 4.0);
     }
 
     // 28. Left Atrial Appendage (LAA) Ostium, Landing Zone & Trabeculated Lobes
-    if (!isHighRvotLive && !isVentricularRvLive && !isTspLive && (forLandmarkScan || isLaLive || (rawX > 26.0 && rawY > 4.0))) {
+    if (wHighRvot < 0.60 && wVentRv < 0.60 && !isTspLive && (forLandmarkScan || isLaLive || (rawX > 26.0 && rawY > 4.0))) {
       const morphHookY =
         simState.laaMorphology === 'chicken_wing'
           ? -4.5
@@ -1651,26 +1864,31 @@ function evaluateAnalyticalCardiacAndDeviceField(
               : 0.0;
       const laaNeck = forLandmarkScan
         ? sdCapsule3D(x, y, z, 37.0, 16.5, -6.5, 53.0, 28.5, 1.5, 9.5)
-        : sdCapsule3D(x, y, z, 38.0, 14.5, -3.5, 55.5, 25.5, 2.0, 9.4);
+        : isLaLive
+          ? sdCapsule3D(x, y, z, 37.0, 9.2, -1.8, 54.5, 22.8, 2.0, 10.2)
+          : sdCapsule3D(x, y, z, 36.0, 14.5, -3.5, 55.5, 25.5, 2.0, 9.6);
       const laaLobe = forLandmarkScan
         ? sdCapsule3D(x, y, z, 53.0, 28.5, 1.5, 61.0, 33.0 + morphHookY, 8.5, 7.8)
-        : sdCapsule3D(x, y, z, 55.5, 25.5, 2.0, 63.0, 30.5 + morphHookY, 7.5, 7.8);
+        : isLaLive
+          ? sdCapsule3D(x, y, z, 54.5, 22.8, 2.0, 62.5, 29.0 + morphHookY, 4.8, 8.6)
+          : sdCapsule3D(x, y, z, 55.5, 25.5, 2.0, 63.0, 30.5 + morphHookY, 7.5, 7.8);
       const laaBest = laaNeck.dist < laaLobe.dist ? laaNeck : laaLobe;
-      const laaPerturbedDist = !forLandmarkScan && rawX > 48.0 ? laaBest.dist + (M_warpHetero - 0.5) * 0.45 : laaBest.dist;
-      const laaPectinate = 0.46 + 0.14 * M_warpHetero;
-      if (!isLeftPvViewLive) {
+      const laaTrabeculae = !forLandmarkScan && rawX > 46.0 ? (M_warpHetero - 0.5) * 1.15 : 0.0;
+      const laaPerturbedDist = laaBest.dist + laaTrabeculae;
+      const laaPectinate = 0.44 + 0.16 * M_warpHetero;
+      if (wLeftPv < 0.55) {
         commitHitFast(
           StructureId.LAA_OSTIUM_AND_LOBES,
           laaPerturbedDist,
-          forLandmarkScan ? 2.0 : 1.55,
+          forLandmarkScan ? 2.0 : 1.75,
           laaBest.nx,
           laaBest.ny,
           laaBest.nz,
           laaPectinate,
           true,
-          9.5,
+          10.2,
           StructureId.LA_CAVITY,
-          4.0
+          4.8
         );
 
         if (simState.laaThrombusPresent && laaLobe.dist < -1.0 && rawX > 54.0) {
@@ -1699,32 +1917,36 @@ function evaluateAnalyticalCardiacAndDeviceField(
         }
       }
 
-      // 29. Coumadin Ridge (Bulbous Left Lateral "Q-tip" Ridge separating LAA anteriorly from LSPV posteriorly)
-      const coumCap = isLeftPvViewLive
-        ? sdCapsule3D(vx, vy, vz, 33.4, 28.7, -20.0, 36.5, 33.9, -21.9, 3.2)
-        : sdCapsule3D(vx, vy, vz, 43.5, 21.5, -10.5, 49.5, 31.5, -15.0, forLandmarkScan ? 4.6 : 3.2);
-      commitHitFast(StructureId.COUMADIN_RIDGE, coumCap.dist, forLandmarkScan ? 1.7 : 1.05, coumCap.nx, coumCap.ny, coumCap.nz, 0.64, false);
+      // 29. Coumadin Ridge (Bulbous Left Lateral "Q-tip" Ridge anchored directly to the superior/anterior LA wall above LSPV)
+      const coumCap = wLeftPv > 0.45
+        ? sdCapsule3D(vx, vy, vz, 27.93, 33.09, -16.99, 32.38, 29.93, -19.50, 2.3)
+        : sdCapsule3D(vx, vy, vz, 43.5, 22.5, -10.5, 49.5, 31.5, -15.0, forLandmarkScan ? 4.6 : 3.2);
+      commitHitFast(StructureId.COUMADIN_RIDGE, coumCap.dist, forLandmarkScan ? 1.7 : 0.85, coumCap.nx, coumCap.ny, coumCap.nz, 0.42, false);
     }
 
     // 30, 31, 32, 33. Pulmonary Veins (LSPV, LIPV, RSPV, RIPV)
-    if (!isHighRvotLive && !isVentricularRvLive && lspvCap) {
-      let lspvSdf = lspvCap.dist;
-      if (!forLandmarkScan && !isLaLive && !isTspLive && laActiveSdf < -0.25 && Math.abs(lspvSdf) <= 1.45) {
-        lspvSdf = Math.min(lspvSdf, -1.60);
+    if (wHighRvot < 0.55 && wVentRv < 0.55 && lspvCap) {
+      const pvUnifiedSdf = Math.min(
+        laOpenPvSdf,
+        Math.min(lspvCap.dist, lipvCap ? lipvCap.dist : 100.0)
+      );
+      const isPosteriorUnifiedPv = !forLandmarkScan && !isLaLive && !isTspLive;
+      const lipvDistVal = lipvCap ? lipvCap.dist : 100.0;
+      if (!isPosteriorUnifiedPv || (laOpenPvSdf >= -1.2 && lspvCap.dist <= lipvDistVal + 0.4)) {
+        const lspvSdf = isPosteriorUnifiedPv ? pvUnifiedSdf : lspvCap.dist;
+        commitHitFast(StructureId.LSPV, lspvSdf, forLandmarkScan ? 1.8 : 1.45, lspvCap.nx, lspvCap.ny, lspvCap.nz, 0.44, true, 8.0, StructureId.LA_CAVITY, 3.6);
       }
-      commitHitFast(StructureId.LSPV, lspvSdf, forLandmarkScan ? 1.8 : 1.45, lspvCap.nx, lspvCap.ny, lspvCap.nz, 0.46, true, 8.0, StructureId.LA_CAVITY, 3.6);
       if (lspvCap.dist < -1.2) {
         flowVx = -48.0;
         flowVy = -24.0;
         flowVz = 20.0;
       }
 
-      if (!isTspLive && lipvCap) {
-        let lipvSdf = lipvCap.dist;
-        if (!forLandmarkScan && !isLaLive && laActiveSdf < -0.25 && Math.abs(lipvSdf) <= 1.45) {
-          lipvSdf = Math.min(lipvSdf, -1.60);
+      if (lipvCap) {
+        if (!isPosteriorUnifiedPv || (laOpenPvSdf >= -1.2 && lipvCap.dist <= lspvCap.dist + 0.4)) {
+          const lipvSdf = isPosteriorUnifiedPv ? pvUnifiedSdf : lipvCap.dist;
+          commitHitFast(StructureId.LIPV, lipvSdf, forLandmarkScan ? 1.8 : 1.45, lipvCap.nx, lipvCap.ny, lipvCap.nz, 0.44, true, 8.0, StructureId.LA_CAVITY, 3.6);
         }
-        commitHitFast(StructureId.LIPV, lipvSdf, forLandmarkScan ? 1.8 : 1.45, lipvCap.nx, lipvCap.ny, lipvCap.nz, 0.46, true, 8.0, StructureId.LA_CAVITY, 3.6);
         if (lipvCap.dist < -1.2) {
           flowVx = -45.0;
           flowVy = 10.0;
@@ -1732,9 +1954,9 @@ function evaluateAnalyticalCardiacAndDeviceField(
         }
       }
 
-      if (forLandmarkScan || (!isLaLive && !isTspLive && !isLeftPvViewLive && rawX < 18.0)) {
+      if (forLandmarkScan || (!isLaLive && !isTspLive && wLeftPv < 0.50 && rawX < 18.0)) {
         const rspvCap = sdCapsule3D(x, y, z, 6.0, 22.0, -22.0, -12.0, 27.0, -30.0, 7.8);
-        commitHitFast(StructureId.RSPV, rspvCap.dist, forLandmarkScan ? 1.8 : 1.45, rspvCap.nx, rspvCap.ny, rspvCap.nz, 0.48, true, 8.0, StructureId.LA_CAVITY, 3.6);
+        commitHitFast(StructureId.RSPV, rspvCap.dist, forLandmarkScan ? 1.8 : 1.45, rspvCap.nx, rspvCap.ny, rspvCap.nz, 0.46, true, 8.0, StructureId.LA_CAVITY, 3.6);
         if (rspvCap.dist < -1.2) {
           flowVx = 46.0;
           flowVy = -16.0;
@@ -1742,7 +1964,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
         }
 
         const ripvCap = sdCapsule3D(x, y, z, 5.0, 6.0, -24.0, -13.0, 4.0, -33.0, 7.5);
-        commitHitFast(StructureId.RIPV, ripvCap.dist, forLandmarkScan ? 1.8 : 1.45, ripvCap.nx, ripvCap.ny, ripvCap.nz, 0.48, true, 8.0, StructureId.LA_CAVITY, 3.6);
+        commitHitFast(StructureId.RIPV, ripvCap.dist, forLandmarkScan ? 1.8 : 1.45, ripvCap.nx, ripvCap.ny, ripvCap.nz, 0.46, true, 8.0, StructureId.LA_CAVITY, 3.6);
         if (ripvCap.dist < -1.2) {
           flowVx = 44.0;
           flowVy = 8.0;
@@ -1755,17 +1977,22 @@ function evaluateAnalyticalCardiacAndDeviceField(
   // ============================================================================
   // G. MITRAL VALVE, LEFT VENTRICLE, PAPILLARY MUSCLES & MEDIASTINUM (IDs 34..39)
   // ============================================================================
-  if (forLandmarkScan || (!isTspLive && !isHighRvotLive)) {
+  if (forLandmarkScan || (wHighRvot < 0.65 && !isTspLive)) {
     // 34. Mitral Valve Annulus & Thin Mobile Leaflets (AML / PML)
-    if (rawX > 26.0 && rawY < 16.0 && rawZ < 14.0 && !isLeftPvViewLive) {
+    if (
+      rawX > 26.0 &&
+      rawY < 16.0 &&
+      rawZ < (isVentricularRvLive && !forLandmarkScan ? -15.5 : 14.0) &&
+      wLeftPv < 0.55
+    ) {
       const mvCap1 = forLandmarkScan
         ? sdCapsule3D(rawX, rawY, rawZ, 34.0, 2.0, 8.0, 48.1, -6.1 - mvOpen * 0.4, -12.0, 4.8)
-        : sdCapsule3D(vx, vy, vz, 36.5, 7.5, -13.5, 48.5, -6.8 - mvOpen * 0.45, -12.5, 1.15);
+        : sdCapsule3D(vx, vy, vz, 36.5, 7.5, -13.5, 48.5, -6.8 - mvOpen * 0.45, -12.5, 1.10);
       const mvCap2 = forLandmarkScan
         ? sdCapsule3D(rawX, rawY, rawZ, 36.0, -8.0, 4.0, 49.0, -10.0, -8.0, 4.5)
-        : sdCapsule3D(vx, vy, vz, 37.5, -4.5, -2.0, 49.5, -10.5 + mvOpen * 0.25, -14.8, 1.10);
+        : sdCapsule3D(vx, vy, vz, 37.5, -4.5, -2.0, 49.5, -10.5 + mvOpen * 0.25, -14.8, 1.05);
       const mvBest = mvCap1.dist < mvCap2.dist ? mvCap1 : mvCap2;
-      commitHitFast(StructureId.MITRAL_VALVE_AML_PML, mvBest.dist, forLandmarkScan ? 1.6 : 0.55, mvBest.nx, mvBest.ny, mvBest.nz, 0.78, false);
+      commitHitFast(StructureId.MITRAL_VALVE_AML_PML, mvBest.dist, forLandmarkScan ? 1.6 : 0.52, mvBest.nx, mvBest.ny, mvBest.nz, 0.72, false);
       if (mvBest.dist < 6.5 && diaEnv > 0.08) {
         flowVx = 62.0 * diaEnv;
         flowVy = -48.0 * diaEnv;
@@ -1774,75 +2001,98 @@ function evaluateAnalyticalCardiacAndDeviceField(
     }
 
     // 35. Left Ventricle (LV) Thick Compacted Myocardium, Cavity & Interventricular Septum (IVS)
-    if (forLandmarkScan || (!isLaLive && !isLeftPvViewLive && (isVentricularRvLive || rawY < 10.0))) {
+    //     + 36. Protruding Posteromedial (PMPM, 7-8 o'clock) & Anterolateral (ALPM, 4-5 o'clock) Papillary Muscle Bellies (`15_nair` Panel B)
+    if (forLandmarkScan || (!isLaLive && wLeftPv < 0.55 && (isVentricularRvLive || rawY < 10.0))) {
+      // Organic D-shaped / ovoid short-axis contour for LV cavity
+      const dShapeFlat = !forLandmarkScan && isVentricularRvLive && rawX < 51.0 ? (51.0 - rawX) * 0.22 : 0.0;
       const lvEll = forLandmarkScan
         ? sdEllipsoid3D(rawX, rawY, rawZ, 49.5, -8.0, 2.0, 24.0 * rvContract, 26.0 * rvContract, 22.0 * rvContract)
         : isVentricularRvLive
-          ? sdEllipsoid3D(x, y, z, 60.8, -16.5, 4.0, 23.0 * rvContract, 22.8 * rvContract, 20.5 * rvContract)
+          ? sdEllipsoid3D(x + dShapeFlat, y, z, 58.5, -15.5, 4.0, 24.5 * rvContract, 26.2 * rvContract, 22.8 * rvContract)
           : sdEllipsoid3D(x, y, z, 53.5, -18.5, 1.5, 20.5 * rvContract, 16.5 * rvContract, 18.0 * rvContract);
+      const lvTrabeculae =
+        !forLandmarkScan && Math.abs(lvEll.dist) < 4.5
+          ? (M_warpHetero - 0.5) * 1.15
+          : 0.0;
+      let lvPerturbedSdf = lvEll.dist + lvTrabeculae;
+
+      // Evaluate LV Papillary Muscles (`PMPM` at 7-8 o'clock & `ALPM` at 4-5 o'clock) so they protrude inward into the LV cavity (`15_nair` Panel B)
+      let lvPapBestObj: { dist: number; nx: number; ny: number; nz: number } | null = null;
+      if (rawX > 36.0 && rawY < 14.0) {
+        if (forLandmarkScan) {
+          const alPapScan = sdCapsule3D(rawX, rawY, rawZ, 38.0, 12.0, 0.0, 74.0, -5.4, -1.9, 5.2);
+          const pmPapScan = sdCapsule3D(x, y, z, 45.0, -11.5, -4.0, 60.5, -22.0, -16.5, 5.2);
+          lvPapBestObj = alPapScan.dist < pmPapScan.dist ? alPapScan : pmPapScan;
+        } else if (isVentricularRvLive) {
+          // Posteromedial Papillary Muscle (`PMPM` at 7-8 o'clock inferoseptal LV wall, `15_nair` Panel B)
+          const pmPapVent = sdCapsule3D(vx, vy, vz, 61.5, -31.0, 2.8, 66.5, -34.5, 0.8, 4.4);
+          // Anterolateral Papillary Muscle (`ALPM` at 4-5 o'clock anterolateral LV wall, `15_nair` Panel B)
+          const alPapVent = sdCapsule3D(vx, vy, vz, 63.5, -0.5, -0.8, 68.5, 3.0, -2.8, 4.4);
+          lvPapBestObj = alPapVent.dist < pmPapVent.dist ? alPapVent : pmPapVent;
+          if (lvPapBestObj.dist <= 1.2) {
+            // Smoothly indent the LV endocardial contour around the PMPM & ALPM mounds without choking the LV cavity
+            lvPerturbedSdf = Math.max(lvPerturbedSdf, -(lvPapBestObj.dist + 0.65));
+          }
+        } else {
+          const alPap1 = sdCapsule3D(x, y, z, 48.0, -7.0, 2.0, 68.0, -13.5, -1.5, 4.0);
+          const alPap2 = sdCapsule3D(x, y, z, 50.0, -9.5, 4.5, 66.0, -15.5, 2.5, 3.6);
+          const alPap = alPap2.dist < alPap1.dist ? alPap2 : alPap1;
+          const pmPap = sdCapsule3D(x, y, z, 45.0, -11.5, -4.0, 60.5, -22.0, -16.5, 4.2);
+          lvPapBestObj = alPap.dist < pmPap.dist ? alPap : pmPap;
+        }
+      }
+
       const ivsCap1 = sdCapsule3D(x, y, z, 26.0, -4.5, 13.5, 44.0, -16.0, 42.0, forLandmarkScan ? 5.2 : 3.8);
       const ivsCap2 = sdCapsule3D(x, y, z, 40.0, -10.5, 38.0, 52.0, -13.5, 60.0, 3.6);
       const ivsCap = forLandmarkScan && ivsCap2.dist < ivsCap1.dist ? ivsCap2 : ivsCap1;
       if (!isVentricularRvLive && ivsCap.dist <= (forLandmarkScan ? 1.8 : 1.45) && (forLandmarkScan || rvEllDist >= -0.35)) {
-        commitHitFast(StructureId.LV_CAVITY_AND_IVS, ivsCap.dist, forLandmarkScan ? 1.8 : 1.45, ivsCap.nx, ivsCap.ny, ivsCap.nz, 0.54, false);
+        commitHitFast(StructureId.LV_CAVITY_AND_IVS, ivsCap.dist, forLandmarkScan ? 1.8 : 1.45, ivsCap.nx, ivsCap.ny, ivsCap.nz, 0.50, false);
       } else {
         commitHitFast(
           StructureId.LV_CAVITY_AND_IVS,
-          lvEll.dist,
+          lvPerturbedSdf,
           forLandmarkScan ? 5.2 : 3.4,
           lvEll.nx,
           lvEll.ny,
           lvEll.nz,
-          0.48,
+          0.44,
           true,
           23.0,
           StructureId.LA_CAVITY,
-          10.5
+          9.5
         );
       }
 
-      // 36. LV Papillary Muscles (`zf_08` Blocker C2: rounded muscular mounds anchored into the AL 4-5 o'clock & PM 7-8 o'clock LV wall!)
-      if (rawX > 36.0 && rawY < 14.0) {
-        const alPap1 = forLandmarkScan
-          ? sdCapsule3D(rawX, rawY, rawZ, 38.0, 12.0, 0.0, 74.0, -5.4, -1.9, 5.2)
-          : isVentricularRvLive
-            ? sdCapsule3D(vx, vy, vz, 67.2, -7.8, 6.2, 72.8, -3.2, 3.0, 4.6)
-            : sdCapsule3D(x, y, z, 48.0, -7.0, 2.0, 68.0, -13.5, -1.5, 4.0);
-        const alPap2 = sdCapsule3D(x, y, z, 50.0, -9.5, 4.5, 66.0, -15.5, 2.5, 3.6);
-        const alPap = !forLandmarkScan && !isVentricularRvLive && alPap2.dist < alPap1.dist ? alPap2 : alPap1;
-        const pmPap = isVentricularRvLive
-          ? sdCapsule3D(vx, vy, vz, 67.5, -25.5, 8.0, 73.2, -30.5, 5.8, 4.6)
-          : sdCapsule3D(x, y, z, 45.0, -11.5, -4.0, 60.5, -22.0, -16.5, forLandmarkScan ? 5.2 : 4.2);
-        const lvPapBest = alPap.dist < pmPap.dist ? alPap : pmPap;
+      if (lvPapBestObj) {
         commitHitFast(
           StructureId.LV_PAPILLARY_AL_PM,
-          lvPapBest.dist,
+          lvPapBestObj.dist,
           forLandmarkScan ? 1.8 : 1.15,
-          lvPapBest.nx,
-          lvPapBest.ny,
-          lvPapBest.nz,
-          forLandmarkScan ? 0.72 : 0.52,
+          lvPapBestObj.nx,
+          lvPapBestObj.ny,
+          lvPapBestObj.nz,
+          forLandmarkScan ? 0.72 : 0.45,
           false
         );
       }
     }
 
-    // 37. Descending Thoracic Aorta & 38. Retrocardiac Esophagus (`zf_15` Blocker B: positioned posterior to LIPV/LSPV ostia!)
+    // 37. Descending Thoracic Aorta & 38. Retrocardiac Esophagus (`zf_15` Blocker B: single circular cross-section posterior to LIPV/LSPV ostia!)
     if (forLandmarkScan || (!isLaLive && rawZ < -20.0)) {
-      const descAoLiveA = sdCapsule3D(x, y, z, 61.7, 4.1, -26.5, 76.5, 4.7, -52.7, 7.6);
+      const descAoLeftPv = sdCapsule3D(x, y, z, 66.48, 12.96, -45.13, 72.38, 12.42, -34.69, 7.6);
       const descAoLiveB = sdCapsule3D(x, y, z, 58.0, 35.0, -48.0, 62.0, -30.0, -55.0, 8.2);
       const descAo1 = forLandmarkScan
         ? sdCapsule3D(x, y, z, 48.0, 42.0, -44.0, 52.0, -35.0, -54.0, 10.2)
-        : descAoLiveA.dist < descAoLiveB.dist
-          ? descAoLiveA
+        : wLeftPv > 0.45
+          ? descAoLeftPv
           : descAoLiveB;
       const descAo2 = sdCapsule3D(x, y, z, 14.0, -25.0, 12.0, 16.0, -90.0, 10.0, 9.0);
       const descBest = (forLandmarkScan && descAo2.dist < descAo1.dist) ? descAo2 : descAo1;
-      commitHitFast(StructureId.DESCENDING_AORTA, descBest.dist, forLandmarkScan ? 2.2 : 1.65, descBest.nx, descBest.ny, descBest.nz, 0.56, true, 9.2, 0, 3.6);
+      commitHitFast(StructureId.DESCENDING_AORTA, descBest.dist, forLandmarkScan ? 2.2 : 1.65, descBest.nx, descBest.ny, descBest.nz, 0.50, true, 9.2, 0, 3.6);
 
       const esoCap = sdCapsule3D(vx, vy, vz, 22.0, 34.0, -38.0, 28.0, -20.0, -46.0, forLandmarkScan ? 5.5 : 4.0);
       if (esoCap.dist < 3.0) {
-        commitHitFast(StructureId.RETROCARDIAC_ESOPHAGUS, esoCap.dist, forLandmarkScan ? 2.2 : 1.45, esoCap.nx, esoCap.ny, esoCap.nz, 0.58, false);
+        commitHitFast(StructureId.RETROCARDIAC_ESOPHAGUS, esoCap.dist, forLandmarkScan ? 2.2 : 1.45, esoCap.nx, esoCap.ny, esoCap.nz, 0.52, false);
       }
     }
   }
@@ -1856,20 +2106,19 @@ function evaluateAnalyticalCardiacAndDeviceField(
   }
 
   // ============================================================================
-  // G2. ORGANIC 3D HOST-CHAMBER NEAR-FIELD CONTINUITY (`[SPEC PATCH #1.1.2]`)
+  // G2. ORGANIC 3D HOST-CHAMBER NEAR-FIELD CONTINUITY (`spec_S_final_v2` Section 3.1.1)
+  //     Un-frozen in 3D world space so A/P & L/R tilting visibly sweeps the near-field!
   // ============================================================================
   if (!forLandmarkScan && activeTransducerCtx.active) {
     const [p0x, p0y, p0z] = activeTransducerCtx.pos;
     const [nfx, nfy, nfz] = activeTransducerCtx.faceNormal;
-    const [lx, ly, lz] = activeTransducerCtx.latAxis;
     const dx0 = rawX - p0x;
     const dy0 = rawY - p0y;
     const dz0 = rawZ - p0z;
     const uAx = dx0 * nfx + dy0 * nfy + dz0 * nfz;
-    const vLat = dx0 * lx + dy0 * ly + dz0 * lz;
     const rPol = Math.sqrt(dx0 * dx0 + dy0 * dy0 + dz0 * dz0);
 
-    if (uAx > 0.2 && rPol < 30.0) {
+    if (uAx > 0.2 && rPol < 28.0) {
       const cosAlpha = uAx / Math.max(0.5, rPol);
       const hostId =
         activeTransducerCtx.station === 'la_transseptal' || (isLeftPvViewLive && rPol >= 12.0)
@@ -1880,28 +2129,48 @@ function evaluateAnalyticalCardiacAndDeviceField(
               : StructureId.RVOT_INFUNDIBULUM
             : StructureId.RA_CAVITY;
 
-      // Smooth curved 3D teardrop host-chamber radius (ensuring nearFieldMeanLum < 0.08 << 0.12 across all stations)
-      const baseHostRadius = isVentricularRvLive ? 22.8 : activeTransducerCtx.station === 'rv_outflow' ? 22.4 : 24.2;
-      const rHostBoundMm = baseHostRadius * Math.pow(Math.max(0.25, cosAlpha), 0.42) + (x - rawX) * 0.95;
+      // World-space directional modulation (using non-periodic 3D FBM warp `x - rawX`, zero sine waves!)
+      // so tilting A/P (rayDirY) or L/R (rayDirZ) shifts the near-field boundary across the sector!
+      const rayDirY = dy0 / Math.max(0.5, rPol);
+      const rayDirZ = dz0 / Math.max(0.5, rPol);
+      const worldTiltShift =
+        rayDirY * 5.8 +
+        (rayDirZ - 0.30) * 3.6 +
+        (x - rawX) * 1.25;
+      const baseHostRadius = isVentricularRvLive
+        ? 17.5
+        : activeTransducerCtx.station === 'rv_outflow'
+          ? 18.2
+          : 18.8;
+      const rHostBoundMm = Math.max(
+        15.2,
+        baseHostRadius * Math.pow(Math.max(0.20, cosAlpha), 0.56) + worldTiltShift
+      );
 
-      if (rPol < rHostBoundMm) {
-        const hostSdf = rPol - (rHostBoundMm + 1.8);
-        if (hostSdf < M_minLumenSdf) {
-          M_minLumenSdf = hostSdf;
-          M_nearestLumenId = hostId;
-          M_nearestLumenWallMm = 4.2;
-        }
-        M_isInsideAnyBloodLumen = true;
+      const hostSdf = rPol - rHostBoundMm;
+      if (hostSdf < M_minLumenSdf) {
+        M_minLumenSdf = hostSdf;
+        M_nearestLumenId = hostId;
+        M_nearestLumenWallMm = 4.2;
+        M_nearestLumenNx = dx0 / Math.max(0.5, rPol);
+        M_nearestLumenNy = rayDirY;
+        M_nearestLumenNz = rayDirZ;
+      }
 
-        // Preserve intentional focal landmarks outside the immediate apex standoff (rPol >= 21.5 mm)
+      if (hostSdf < 0.0) {
+        // Preserve any real 3D intracardiac landmark, valve, septum, or ridge outside the immediate lens apex (rPol >= 11.5 mm)
         const isProtectedLandmark =
           M_bestId >= 40 ||
-          (rPol >= 21.5 &&
-            (M_bestId === StructureId.FOSSA_OVALIS ||
+          (rPol >= 11.5 &&
+            M_bestId >= 2 &&
+            M_bestId !== hostId &&
+            (M_bestBackscatter >= 0.25 ||
+              M_bestId === StructureId.FOSSA_OVALIS ||
               M_bestId === StructureId.IAS_LIMBUS ||
               M_bestId === StructureId.COUMADIN_RIDGE ||
               M_bestId === StructureId.TRICUSPID_VALVE_ANT ||
               M_bestId === StructureId.TRICUSPID_VALVE_SEPT ||
+              M_bestId === StructureId.TRICUSPID_VALVE_POST ||
               M_bestId === StructureId.AORTIC_VALVE_NCC ||
               M_bestId === StructureId.AORTIC_VALVE_RCC ||
               M_bestId === StructureId.AORTIC_VALVE_LCC ||
@@ -1909,64 +2178,57 @@ function evaluateAnalyticalCardiacAndDeviceField(
               M_bestId === StructureId.MITRAL_VALVE_AML_PML));
 
         if (!isProtectedLandmark) {
-          M_bestId = hostId;
-          M_bestZ = 1.61;
-          M_bestBackscatter = 0.008;
-          M_bestAtten = 0.14;
-          M_bestBorder = 0.0;
+          const hostBoundaryFade = smoothstep01(-3.2, 0.0, hostSdf);
+          if (hostSdf < -3.2 || M_bestBackscatter < 0.03) {
+            M_isInsideAnyBloodLumen = true;
+            M_bestId = hostId;
+            M_bestZ = 1.61;
+            M_bestBackscatter = 0.008;
+            M_bestAtten = 0.14;
+            M_bestBorder = 0.0;
+          } else {
+            M_bestBackscatter = 0.008 + (M_bestBackscatter - 0.008) * hostBoundaryFade;
+            M_bestZ = 1.61 + (M_bestZ - 1.61) * hostBoundaryFade;
+            M_bestBorder *= hostBoundaryFade;
+          }
         }
-      } else if (
-        !M_isInsideAnyBloodLumen &&
-        rPol >= rHostBoundMm &&
-        rPol <= rHostBoundMm + 2.2 &&
-        Math.abs(vLat) > 13.5 &&
-        M_bestBackscatter < 0.12
-      ) {
-        const wallProx = 1.0 - Math.abs(rPol - (rHostBoundMm + 1.1)) / 1.1;
-        M_bestId = hostId;
-        M_bestZ = 1.71;
-        M_bestBackscatter = (0.30 + 0.18 * wallProx) * (0.78 + 0.38 * M_warpHetero);
-        M_bestAtten = 0.52;
-        M_bestBorder = Math.max(M_bestBorder, wallProx * 0.42);
-        const sgn = vLat >= 0 ? -1.0 : 1.0;
-        M_bestNx = lx * sgn;
-        M_bestNy = ly * sgn;
-        M_bestNz = lz * sgn;
       }
     }
   }
 
   // ============================================================================
   // H. CONTINUOUS SURROUNDING MYOCARDIAL, FIBROFATTY, PERICARDIAL & MEDIASTINAL
-  //    TISSUE MATRIX (`[SPEC PATCH #1]` — ZERO FLOATING RINGS OR ZEBRA BANDS!)
+  //    TISSUE MATRIX (Pure Non-Periodic 3D FBM Heterogeneity + Smooth-Min Envelope)
   // ============================================================================
-  // For live B-mode and 4D rendering (!forLandmarkScan), any point that is NOT inside a carved
-  // blood-filled chamber or vessel lumen (`!M_isInsideAnyBloodLumen` and `M_minLumenSdf > 0`)
-  // and has not already been assigned high tissue backscatter is part of the continuous
-  // cardiac/mediastinal soft-tissue bed!
-  // IMPORTANT: Leave `M_bestId = 0` for deep background parenchyma so `screenStructureMap`
-  // only tags actual anatomical chambers and walls (preventing background tissue from shifting chamber labels!).
-  if (!forLandmarkScan && !M_isInsideAnyBloodLumen && M_bestBackscatter < 0.12) {
-    const dLumen = Math.max(0.0, M_minLumenSdf);
+  if (!forLandmarkScan && !M_isInsideAnyBloodLumen && M_minLumenSdf > 0.0 && M_bestBackscatter < 0.12) {
+    const dLumen = M_minLumenSdf;
+    // Use smooth-minimum outer envelope (`M_smoothLumenSdf`) for outer pericardial/mediastinal decay
+    // so adjacent chambers merge into a single organic cardiac silhouette instead of snowman/Mickey-Mouse circles!
+    const dSmoothOuter = Math.max(0.0, M_smoothLumenSdf < 900.0 ? M_smoothLumenSdf : M_minLumenSdf);
     const wallW = M_nearestLumenWallMm;
-    const heteroFactor = 0.72 + 0.48 * M_warpHetero;
-    const effusionThickness =
+    // Pure non-periodic 3D value-noise FBM heterogeneity (zero periodic sine waves -> zero woodgrain stripes!)
+    const heteroFactor = 0.72 + 0.56 * M_warpHetero;
+    const baseEffusion =
       simState.pericardialEffusionMl === 200 ? 8.5 : simState.pericardialEffusionMl === 50 ? 4.2 : 0.0;
+    const effusionThickness = baseEffusion * smoothstep01(34.0, 44.0, rawX);
 
     if (dLumen <= wallW) {
       // 1. Compacted Myocardial / Vascular Wall Zone surrounding every chamber lumen
+      //    Feather the first 1.6 mm (`dLumen` from 0 to 1.6 mm) smoothly so Section H never creates a step at `dLumen = 0`!
+      const innerRamp = smoothstep01(0.0, 1.6, dLumen);
       const wallFrac = dLumen / Math.max(1.0, wallW);
-      const endoSpec = Math.exp(-Math.pow(dLumen / 0.95, 2));
+      const endoSpec = Math.exp(-Math.pow((dLumen - 1.2) / 1.15, 2)) * (0.55 + 0.35 * M_warpHetero) * innerRamp;
       M_bestId = dLumen <= 1.8 ? M_nearestLumenId : 0;
-      M_bestZ = 1.71 + 0.03 * endoSpec;
-      M_bestBackscatter = Math.min(0.62, (0.28 + 0.16 * (1.0 - wallFrac) + 0.10 * endoSpec) * heteroFactor);
-      M_bestAtten = 0.54;
-      M_bestBorder = Math.max(M_bestBorder, endoSpec * 0.42);
+      M_bestZ = 1.61 + (0.10 + 0.03 * endoSpec) * innerRamp;
+      const targetWallBs = Math.min(0.56, (0.24 + 0.15 * (1.0 - wallFrac) + 0.08 * endoSpec) * heteroFactor);
+      M_bestBackscatter = Math.max(M_bestBackscatter, targetWallBs * (0.08 + 0.92 * innerRamp));
+      M_bestAtten = 0.55;
+      M_bestBorder = Math.max(M_bestBorder, endoSpec * 0.36);
       M_bestNx = M_nearestLumenNx;
       M_bestNy = M_nearestLumenNy;
       M_bestNz = M_nearestLumenNz;
-    } else if (effusionThickness > 0.0 && dLumen > wallW && dLumen < wallW + effusionThickness && rawX > 28.0) {
-      // Dependent anechoic pericardial effusion space outside the epicardium
+    } else if (effusionThickness > 0.0 && dSmoothOuter > wallW && dSmoothOuter < wallW + effusionThickness) {
+      // Dependent anechoic pericardial effusion space outside the epicardium (continuous smooth crescent without hard X cutoff!)
       M_bestId = StructureId.PERICARDIAL_SPACE;
       M_bestZ = 1.61;
       M_bestBackscatter = 0.008;
@@ -1974,27 +2236,31 @@ function evaluateAnalyticalCardiacAndDeviceField(
       M_bestBorder = 0.0;
     } else if (
       effusionThickness > 0.0 &&
-      Math.abs(dLumen - (wallW + effusionThickness + 1.4)) <= 1.2
+      Math.abs(dSmoothOuter - (wallW + effusionThickness + 1.4)) <= 1.35
     ) {
       // 2. Outer Parietal Pericardial Interface around an active pericardial effusion
-      const periProx = 1.0 - Math.abs(dLumen - (wallW + effusionThickness + 1.4)) / 1.2;
+      const periProx = 1.0 - Math.abs(dSmoothOuter - (wallW + effusionThickness + 1.4)) / 1.35;
       M_bestId = StructureId.PERICARDIAL_SPACE;
       M_bestZ = 1.82;
-      M_bestBackscatter = (0.46 + 0.20 * periProx) * heteroFactor;
+      M_bestBackscatter = (0.44 + 0.20 * periProx) * heteroFactor;
       M_bestAtten = 0.60;
-      M_bestBorder = Math.max(M_bestBorder, 0.45 * periProx);
+      M_bestBorder = Math.max(M_bestBorder, 0.44 * periProx);
       M_bestNx = M_nearestLumenNx;
       M_bestNy = M_nearestLumenNy;
       M_bestNz = M_nearestLumenNz;
     } else {
-      // 3. Continuous Attenuating Mediastinal, Hepatic & Epicardial Parenchymal Tissue Bed (unlabeled background, M_bestId = 0)
-      const dBeyondWall = Math.max(0.0, dLumen - wallW);
-      const decay = Math.exp(-0.022 * dBeyondWall);
+      // 3. Epicardial/Pericardial Interface + Smoothly Attenuating Far-Field Mediastinal Tissue (`05_ehra`, `14_kour`, `15_nair`)
+      const dBeyondWall = Math.max(0.0, dSmoothOuter - wallW);
+      const periInterface =
+        effusionThickness === 0.0
+          ? 0.15 * Math.exp(-Math.pow((dBeyondWall - 0.85) / 1.85, 2))
+          : 0.0;
+      const decay = Math.exp(-0.088 * dBeyondWall);
       M_bestId = 0;
-      M_bestZ = 1.67;
-      M_bestBackscatter = (0.14 + 0.11 * decay) * heteroFactor;
-      M_bestAtten = 0.50;
-      M_bestBorder = 0.0;
+      M_bestZ = 1.63 + 0.10 * periInterface;
+      M_bestBackscatter = (0.012 + 0.21 * decay + periInterface) * heteroFactor;
+      M_bestAtten = 0.62;
+      M_bestBorder = periInterface * 0.50;
       M_bestNx = M_nearestLumenNx;
       M_bestNy = M_nearestLumenNy;
       M_bestNz = M_nearestLumenNz;
@@ -2042,6 +2308,11 @@ const ANALYTICAL_OUT: EvaluatedAcousticFieldPoint = {
 
 function cardiacPhaseWrap(p: number): number {
   return ((p % 1.0) + 1.0) % 1.0;
+}
+
+function smoothstep01(edge0: number, edge1: number, val: number): number {
+  const t = Math.max(0.0, Math.min(1.0, (val - edge0) / (edge1 - edge0)));
+  return t * t * (3.0 - 2.0 * t);
 }
 
 // ============================================================================
@@ -2733,49 +3004,95 @@ export class UltrasoundSlicerEngine {
         const [vx, vy, vz] = sample.flowVelocityCmPerSec;
         outDoppler[idx] = -(vx * rx + vy * ry + vz * rz);
 
-        const E0 = sample.backscatter;
-        const isBlood = E0 < 0.045 && curZ < 1.65 && sample.borderGradient < 0.15;
+        const rawE0 = sample.backscatter;
+        const isBlood = rawE0 < 0.045 && curZ < 1.65 && sample.borderGradient < 0.15;
         psfIsBlood[idx] = isBlood ? 1 : 0;
 
-        // Angle-Dependent Specular Reflection at endocardial/valvular/pericardial interfaces
+        // Angle-Dependent Specular Reflection & Grazing-Angle Lateral Wall Acoustic Drop-Out (`spec_S_final_v2` 3.2.1):
+        // Perpendicular walls (cosIncidence -> 1, top/bottom axial walls) produce bright specular endocardial echoes,
+        // while parallel/grazing walls (cosIncidence < 0.35, left/right lateral walls) exhibit authentic lateral drop-out!
         const dZ = Math.abs(curZ - prevZ);
         const reflCoeff = dZ / Math.max(1.0, curZ + prevZ);
         const [snx, sny, snz] = sample.surfaceNormal;
-        const cosIncidence = Math.abs(snx * rx + sny * ry + snz * rz);
-        // Strong angle dependence: perpendicular interfaces gleam white; parallel walls exhibit lateral dropout
-        const angleFactor = 0.06 + 0.94 * Math.pow(cosIncidence, 4.0);
-        const borderBoost = sample.borderGradient * 0.14 * angleFactor;
-        let iSpec = isBlood ? 0.0 : Math.min(0.88, reflCoeff * reflCoeff * 18.0 * angleFactor + borderBoost);
+        const cosIncidence = Math.min(1.0, Math.abs(snx * rx + sny * ry + snz * rz));
+
+        const isSolidMuscular =
+          sid === StructureId.MODERATOR_BAND ||
+          sid === StructureId.RV_PAPILLARY_MUSCLES ||
+          sid === StructureId.LV_PAPILLARY_AL_PM ||
+          sid === StructureId.COUMADIN_RIDGE ||
+          sid === StructureId.IAS_LIMBUS ||
+          sid === StructureId.CRISTA_TERMINALIS;
+        const isFibrousLeaflet =
+          sid === StructureId.FOSSA_OVALIS ||
+          sid === StructureId.TRICUSPID_VALVE_ANT ||
+          sid === StructureId.TRICUSPID_VALVE_SEPT ||
+          sid === StructureId.TRICUSPID_VALVE_POST ||
+          sid === StructureId.AORTIC_VALVE_NCC ||
+          sid === StructureId.AORTIC_VALVE_RCC ||
+          sid === StructureId.AORTIC_VALVE_LCC ||
+          sid === StructureId.PULMONIC_VALVE ||
+          sid === StructureId.MITRAL_VALVE_AML_PML ||
+          sid === StructureId.THEBESIAN_VALVE ||
+          sid === StructureId.EUSTACHIAN_RIDGE;
+
+        let E0 = rawE0;
+        if (!isBlood && curZ < 4.5) {
+          if (isSolidMuscular || isFibrousLeaflet) {
+            E0 = rawE0 * (0.92 + 0.16 * cosIncidence);
+          } else {
+            const bWeight = Math.min(1.0, sample.borderGradient * 1.65);
+            const wallIncidenceMod = 0.28 + 0.84 * Math.pow(cosIncidence, 1.50);
+            const parenchIncidenceMod = 0.72 + 0.34 * Math.pow(cosIncidence, 0.85);
+            const incidenceMod = parenchIncidenceMod * (1.0 - bWeight) + wallIncidenceMod * bWeight;
+            E0 = rawE0 * incidenceMod;
+          }
+        }
+
+        // Specular reflection: suppressed on grazing interfaces (cosIncidence < 0.28), crisp & bright on normal interfaces
+        const specAngleFactor =
+          cosIncidence < 0.28 ? 0.0 : Math.pow((cosIncidence - 0.28) / 0.72, 2.75);
+        const borderBoost =
+          sample.borderGradient *
+          (isFibrousLeaflet ? 0.46 : isSolidMuscular ? 0.24 : 0.24 * specAngleFactor);
+        const reflScale = isSolidMuscular ? 8.0 : 22.0;
+        let iSpec = isBlood ? 0.0 : Math.min(0.95, reflCoeff * reflCoeff * reflScale * specAngleFactor + borderBoost);
 
         // Metallic hardware (Watchman FLX struts/hub, TSP needle, Ablation tip): Z >= 4.5
         if (curZ >= 4.5) {
-          iSpec = 1.55;
-          reverbEnergy = 0.14;
+          iSpec = sid === StructureId.TRANSSEPTAL_NEEDLE_SHEATH ? 0.88 : 1.55;
+          reverbEnergy = sid === StructureId.TRANSSEPTAL_NEEDLE_SHEATH ? 0.08 : 0.16;
           reverbStartR = rMm;
-          cumulativeTau += 0.24 * drCm * freqMhz;
+          cumulativeTau += 0.08 * drCm * freqMhz;
         } else {
-          if (reverbEnergy > 0.02 && rMm > reverbStartR) {
+          // Subtle multi-path reverberation behind hyper-echogenic fibrous/calcific/pericardial interfaces
+          if (iSpec > 0.62 && reverbEnergy < 0.05) {
+            reverbEnergy = 0.048;
+            reverbStartR = rMm;
+          } else if (reverbEnergy > 0.015 && rMm > reverbStartR) {
             const distBehind = rMm - reverbStartR;
-            const cw = 0.5 + 0.5 * Math.cos((distBehind / 1.55) * Math.PI * 2);
+            const cw = 0.5 + 0.5 * Math.cos((distBehind / 1.48) * Math.PI * 2);
             iSpec += reverbEnergy * cw * cw * cw;
-            reverbEnergy *= Math.exp(-0.34 * drMm);
+            reverbEnergy *= Math.exp(-0.32 * drMm);
           }
           cumulativeTau += sample.attenuationDbCmMhz * 0.056 * drCm * freqMhz;
         }
 
-        const shadowAtten = Math.max(0.28, Math.exp(-cumulativeTau));
-        psfBaseE0[idx] = E0;
-        psfSpec[idx] = iSpec;
+        const shadowAtten = Math.max(0.26, Math.exp(-cumulativeTau));
+        const tTissue = Math.max(0.0, Math.min(1.0, (rawE0 - 0.008) / 0.132));
+        const tissueW = tTissue * tTissue * (3.0 - 2.0 * tTissue);
+        psfBaseE0[idx] = 0.0005 + tissueW * (E0 * 0.44 + iSpec * 0.56);
         psfGainAtten[idx] = shadowAtten * tgcGainByIr[ir] * apodization;
 
-        if (isBlood) {
-          psfI0[idx] = 0.010 * polarSubI[idx];
-          psfQ0[idx] = 0.010 * polarSubQ[idx];
+        if (tissueW < 0.002) {
+          psfI0[idx] = 0.015 * polarSubI[idx];
+          psfQ0[idx] = 0.015 * polarSubQ[idx];
         } else {
           const iq3d = sampleComplexScatter3D(wx + advX, wy + advY, wz + advZ, freqMhz);
-          const scatterAmp = Math.sqrt(Math.max(0.0004, E0 + 0.35 * iSpec));
-          psfI0[idx] = scatterAmp * (iq3d.i0 * 0.62 + polarSubI[idx]);
-          psfQ0[idx] = scatterAmp * (iq3d.q0 * 0.62 + polarSubQ[idx]);
+          const rawScatterAmp = Math.sqrt(Math.max(0.0004, E0 * 1.08 + 0.54 * iSpec));
+          const scatterAmp = 0.015 + tissueW * (rawScatterAmp - 0.015);
+          psfI0[idx] = scatterAmp * (iq3d.i0 * 0.62 * tissueW + polarSubI[idx]);
+          psfQ0[idx] = scatterAmp * (iq3d.q0 * 0.62 * tissueW + polarSubQ[idx]);
         }
 
         prevZ = curZ;
@@ -2785,99 +3102,129 @@ export class UltrasoundSlicerEngine {
     activeTransducerCtx.active = false;
 
     // =========================================================================
-    // PASS 2: Separable 3-Tap Crisp Axial x 7-Tap Azimuthal Polar-PSF Convolution
+    // PASS 2: Separable 7-Tap Axial x 9-Tap Azimuthal Polar-PSF Convolution
+    //         (Authentic Ultrasound Beam Feathering — Zero Scissor-Cut Edges!)
     // =========================================================================
-    // 2A. 3-Tap Crisp Axial PSF Convolution (`[0.18, 0.64, 0.18]`, L2 norm = 0.6888)
+    // 2A. 7-Tap Axial PSF Convolution (`[0.04, 0.11, 0.21, 0.28, 0.21, 0.11, 0.04]`, sum = 1.0)
     for (let ia = 0; ia < POLAR_AZIMUTH_BINS; ia++) {
       const row = ia * POLAR_RADIAL_BINS;
       for (let ir = 0; ir < POLAR_RADIAL_BINS; ir++) {
         const idx = row + ir;
+        const irM3 = row + Math.max(0, ir - 3);
+        const irM2 = row + Math.max(0, ir - 2);
         const irM1 = row + Math.max(0, ir - 1);
         const irP1 = row + Math.min(POLAR_RADIAL_BINS - 1, ir + 1);
+        const irP2 = row + Math.min(POLAR_RADIAL_BINS - 1, ir + 2);
+        const irP3 = row + Math.min(POLAR_RADIAL_BINS - 1, ir + 3);
 
-        psfITemp[idx] = 0.18 * psfI0[irM1] + 0.64 * psfI0[idx] + 0.18 * psfI0[irP1];
-        psfQTemp[idx] = 0.18 * psfQ0[irM1] + 0.64 * psfQ0[idx] + 0.18 * psfQ0[irP1];
+        psfITemp[idx] =
+          0.04 * (psfI0[irM3] + psfI0[irP3]) +
+          0.11 * (psfI0[irM2] + psfI0[irP2]) +
+          0.21 * (psfI0[irM1] + psfI0[irP1]) +
+          0.28 * psfI0[idx];
+        psfQTemp[idx] =
+          0.04 * (psfQ0[irM3] + psfQ0[irP3]) +
+          0.11 * (psfQ0[irM2] + psfQ0[irP2]) +
+          0.21 * (psfQ0[irM1] + psfQ0[irP1]) +
+          0.28 * psfQ0[idx];
+        psfSpec[idx] =
+          0.04 * (psfBaseE0[irM3] + psfBaseE0[irP3]) +
+          0.11 * (psfBaseE0[irM2] + psfBaseE0[irP2]) +
+          0.21 * (psfBaseE0[irM1] + psfBaseE0[irP1]) +
+          0.28 * psfBaseE0[idx];
       }
     }
 
-    // 2B. 7-Tap Depth- & Focus-Dependent Azimuthal PSF Convolution + Multiplicative Rayleigh Envelope
-    // + Near-Field Apex Ring-Down + Log-Compression + [SPEC PATCH #9] Reject Toe & S-Curve
-    const compressionK = 9.2 * (60.0 / dynRangeDb);
-    const logDenom = Math.log10(1.0 + compressionK * 1.95);
+    // 2B. 9-Tap Depth- & Focus-Dependent Azimuthal PSF Convolution + Unified Rayleigh Envelope
+    //     (No post-PSF S-curve sharpening — preserves full multi-pixel PSF speckle feathering!)
+    const compressionK = 6.2 * (60.0 / dynRangeDb);
+    const logDenom = Math.log10(1.0 + compressionK * 2.15);
 
     for (let ir = 0; ir < POLAR_RADIAL_BINS; ir++) {
       const rMm = MIN_RADIUS_MM + (ir + 0.5) * drMm;
       const depthNorm = ir / (POLAR_RADIAL_BINS - 1);
       const focalDistNorm = Math.abs(rMm - focusMm) / maxDepthMm;
-      // Azimuthal PSF spread widens with depth and away from the focal zone, creating authentic horizontal/arcuate speckle grains
-      const azSpread = Math.min(1.0, 0.25 + 0.55 * depthNorm + 0.35 * focalDistNorm);
-      const w0 = 0.36 - 0.10 * azSpread;
-      const w1 = 0.22 + 0.01 * azSpread;
-      const w2 = 0.08 + 0.025 * azSpread;
-      const w3 = 0.02 + 0.015 * azSpread;
-      // L2 norm of azimuthal kernel for Rayleigh energy preservation
-      const azNorm = Math.sqrt(w0 * w0 + 2.0 * (w1 * w1 + w2 * w2 + w3 * w3));
-      const invPsfL2 = 1.0 / (0.6888 * azNorm);
+      // Authentic phased-array far-field azimuthal beam broadening (`spec_S_final_v2` 3.2.3):
+      const farFieldDivergence = Math.max(0.0, (depthNorm - 0.32) / 0.68);
+      const azSpread = Math.min(
+        1.0,
+        0.24 + 0.56 * Math.pow(farFieldDivergence, 1.12) + 0.30 * focalDistNorm
+      );
+      const w0 = 0.28 - 0.10 * azSpread;
+      const w1 = 0.20 - 0.02 * azSpread;
+      const w2 = 0.10 + 0.035 * azSpread;
+      const w3 = 0.042 + 0.040 * azSpread;
+      const w4 = 0.018 + 0.025 * azSpread;
+      // L2/L1 hybrid normalization of 7x9 Polar-PSF kernel for spatially correlated 3D scatterers
+      const azNorm = Math.sqrt(w0 * w0 + 2.0 * (w1 * w1 + w2 * w2 + w3 * w3 + w4 * w4));
+      const invPsfL2 = 1.0 / (0.68 * azNorm + 0.25);
 
       // Near-field transducer acoustic lens ring-down reverberation arc (r = 3.0 .. 7.2 mm)
       const isNearRingDown = rMm < 7.2;
       const ringDownEnv = isNearRingDown
-        ? Math.exp(-0.78 * (rMm - MIN_RADIUS_MM)) *
+        ? Math.exp(-0.84 * (rMm - MIN_RADIUS_MM)) *
           Math.pow(0.5 + 0.5 * Math.cos((rMm - MIN_RADIUS_MM) * 2.95), 1.6) *
-          0.66
+          0.44
         : 0.0;
 
       for (let ia = 0; ia < POLAR_AZIMUTH_BINS; ia++) {
         const idx = ia * POLAR_RADIAL_BINS + ir;
+        const iaM4 = Math.max(0, ia - 4) * POLAR_RADIAL_BINS + ir;
         const iaM3 = Math.max(0, ia - 3) * POLAR_RADIAL_BINS + ir;
         const iaM2 = Math.max(0, ia - 2) * POLAR_RADIAL_BINS + ir;
         const iaM1 = Math.max(0, ia - 1) * POLAR_RADIAL_BINS + ir;
         const iaP1 = Math.min(POLAR_AZIMUTH_BINS - 1, ia + 1) * POLAR_RADIAL_BINS + ir;
         const iaP2 = Math.min(POLAR_AZIMUTH_BINS - 1, ia + 2) * POLAR_RADIAL_BINS + ir;
         const iaP3 = Math.min(POLAR_AZIMUTH_BINS - 1, ia + 3) * POLAR_RADIAL_BINS + ir;
+        const iaP4 = Math.min(POLAR_AZIMUTH_BINS - 1, ia + 4) * POLAR_RADIAL_BINS + ir;
 
         const barI =
+          w4 * (psfITemp[iaM4] + psfITemp[iaP4]) +
           w3 * (psfITemp[iaM3] + psfITemp[iaP3]) +
           w2 * (psfITemp[iaM2] + psfITemp[iaP2]) +
           w1 * (psfITemp[iaM1] + psfITemp[iaP1]) +
           w0 * psfITemp[idx];
 
         const barQ =
+          w4 * (psfQTemp[iaM4] + psfQTemp[iaP4]) +
           w3 * (psfQTemp[iaM3] + psfQTemp[iaP3]) +
           w2 * (psfQTemp[iaM2] + psfQTemp[iaP2]) +
           w1 * (psfQTemp[iaM1] + psfQTemp[iaP1]) +
           w0 * psfQTemp[idx];
 
-        // True PSF-convolved Rayleigh amplitude envelope (in [0, ~2.8], with genuine dark nulls!)
-        const psfRayleighAmp = Math.sqrt(barI * barI + barQ * barQ) * invPsfL2 * 0.798;
-        const E0 = psfBaseE0[idx];
-        const iSpec = psfSpec[idx];
-        const isBloodBin = psfIsBlood[idx] === 1;
-        const localAmp = isBloodBin ? 0.010 : Math.sqrt(Math.max(0.0004, E0 + 0.35 * iSpec));
-        // Normalized multiplicative Rayleigh factor R in [0.02, 2.55]
-        const R = Math.max(0.02, Math.min(2.55, psfRayleighAmp / localAmp));
+        const psfIncoherentEnv =
+          w4 * (psfSpec[iaM4] + psfSpec[iaP4]) +
+          w3 * (psfSpec[iaM3] + psfSpec[iaP3]) +
+          w2 * (psfSpec[iaM2] + psfSpec[iaP2]) +
+          w1 * (psfSpec[iaM1] + psfSpec[iaP1]) +
+          w0 * psfSpec[idx];
 
-        let env: number;
-        if (isBloodBin && !isNearRingDown) {
-          // Inside anechoic blood cavity: allow subtle PSF boundary feathering within 1-2 taps of bright walls
-          // while keeping the interior of the blood pool dark (mean luminance < 0.015 << 0.12)
-          const boundaryFeather = Math.max(0.0, psfRayleighAmp - 0.068) * 0.16;
-          const microBlood = 0.0014 * R * R;
-          env = (microBlood + boundaryFeather) * psfGainAtten[idx];
-        } else {
-          // Multiplicative Rayleigh tissue backscatter + incoherent microstructure floor + specular highlight
-          const rayleighMod = 0.08 + 0.76 * Math.pow(R, 1.22);
-          const tissueEcho = E0 * rayleighMod + iSpec * (0.18 + 0.64 * R) + ringDownEnv * (0.55 + 0.40 * R);
-          env = tissueEcho * psfGainAtten[idx];
-        }
+        // Unified PSF-convolved Rayleigh amplitude & incoherent envelope across all bins
+        const psfRayleighAmp = Math.sqrt(barI * barI + barQ * barQ) * invPsfL2 * 0.94;
+        const refAmp = Math.sqrt(Math.max(0.0005, psfIncoherentEnv));
+        const R = Math.max(0.02, Math.min(2.45, psfRayleighAmp / refAmp));
+
+        const coherentEcho = Math.pow(psfRayleighAmp, 1.38) * 0.58;
+        const incoherentEcho = psfIncoherentEnv * (0.34 + 0.66 * R);
+        // Very low noise-floor knee (0.0005..0.0065) so only deep anechoic blood is suppressed,
+        // preserving 100% of the axial & azimuthal PSF wings across every endocardial border!
+        const tBf = Math.min(1.0, Math.max(0.0, (psfIncoherentEnv - 0.0005) / 0.0060));
+        const bloodFeather = tBf * tBf * (3.0 - 2.0 * tBf);
+        const smoothGainAtten =
+          0.12 * (psfGainAtten[iaM2] + psfGainAtten[iaP2]) +
+          0.24 * (psfGainAtten[iaM1] + psfGainAtten[iaP1]) +
+          0.28 * psfGainAtten[idx];
+        const env =
+          ((coherentEcho + incoherentEcho) * (0.015 + 0.985 * bloodFeather) +
+            ringDownEnv * (0.42 + 0.34 * R)) *
+          smoothGainAtten;
 
         // Stage 5A: Logarithmic Dynamic Range Compression
         const u = Math.min(1.0, Math.max(0.0, Math.log10(1.0 + compressionK * Math.max(0.0, env)) / logDenom));
 
-        // Stage 5B: [SPEC PATCH #9] Reject Toe + S-Curve: L = smoothstep(0.025, 0.96, u)^1.18
-        const t = Math.max(0.0, Math.min(1.0, (u - 0.025) / (0.96 - 0.025)));
-        const smooth = t * t * (3.0 - 2.0 * t);
-        outIntensity[idx] = Math.pow(smooth, 1.18);
+        // Stage 5B: Soft-Toe Linear-Gamma Mapping (No S-curve contrast stretching that would re-sharpen PSF borders)
+        const t = Math.max(0.0, Math.min(1.0, (u - 0.014) / (0.985 - 0.014)));
+        outIntensity[idx] = Math.pow(t, 1.04) * 0.91 + 0.09 * Math.pow(t, 3.6);
       }
     }
   }
