@@ -1,0 +1,4655 @@
+{
+  "version": "1.0.0",
+  "coordinateFrame": "Three.js Right-Handed Y-Up (mm), Origin (0,0,0) at Mid-RA Home View",
+  "originDescription": "bodyPartsToWorld(xBp, yBp, zBp) = [xBp + 14.0, zBp - 1222.0, -(yBp + 120.0)]",
+  "totalVertices": 237647,
+  "totalTriangles": 432350,
+  "vertexByteOffset": 0,
+  "normalByteOffset": 2851764,
+  "indexByteOffset": 5703528,
+  "meshes": [
+    {
+      "index": 0,
+      "id": "MM419_BP51898",
+      "fmaId": "FMA7108",
+      "name": "Interatrial septum",
+      "structureId": 11,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#E8DFD1",
+      "fresnelRimHex": "#F8FAFC",
+      "renderOrder": 2,
+      "vertexOffset": 0,
+      "vertexCount": 65,
+      "indexOffset": 0,
+      "indexCount": 378,
+      "centroidMm": [
+        -0.51,
+        42.38,
+        13.31
+      ],
+      "boundsMinMm": [
+        -4.21,
+        40.36,
+        12.05
+      ],
+      "boundsMaxMm": [
+        3.24,
+        44.51,
+        14.59
+      ]
+    },
+    {
+      "index": 1,
+      "id": "MM420_BP51969",
+      "fmaId": "FMA74912",
+      "name": "Trunk of anterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 65,
+      "vertexCount": 323,
+      "indexOffset": 378,
+      "indexCount": 1926,
+      "centroidMm": [
+        54.31,
+        27.37,
+        10.51
+      ],
+      "boundsMinMm": [
+        49.92,
+        23.52,
+        4.69
+      ],
+      "boundsMaxMm": [
+        59.74,
+        30.08,
+        18.09
+      ]
+    },
+    {
+      "index": 2,
+      "id": "MM422_BP51972",
+      "fmaId": "FMA3860",
+      "name": "Diagonal branch of anterior descending branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 388,
+      "vertexCount": 1010,
+      "indexOffset": 2304,
+      "indexCount": 6048,
+      "centroidMm": [
+        73.06,
+        20.55,
+        10.26
+      ],
+      "boundsMinMm": [
+        57.8,
+        11.85,
+        0.97
+      ],
+      "boundsMaxMm": [
+        85.49,
+        25.93,
+        18.87
+      ]
+    },
+    {
+      "index": 3,
+      "id": "MM423_BP51965",
+      "fmaId": "FMA3888",
+      "name": "Second left anterior branch of anterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 1398,
+      "vertexCount": 636,
+      "indexOffset": 8352,
+      "indexCount": 3804,
+      "centroidMm": [
+        79.73,
+        8.12,
+        26.14
+      ],
+      "boundsMinMm": [
+        62.64,
+        -1.85,
+        17.34
+      ],
+      "boundsMaxMm": [
+        90.94,
+        14.08,
+        32.72
+      ]
+    },
+    {
+      "index": 4,
+      "id": "MM424_BP51969",
+      "fmaId": "FMA74912",
+      "name": "Trunk of anterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 2034,
+      "vertexCount": 554,
+      "indexOffset": 12156,
+      "indexCount": 3312,
+      "centroidMm": [
+        61.56,
+        19.05,
+        24.54
+      ],
+      "boundsMinMm": [
+        56.96,
+        10.76,
+        15.52
+      ],
+      "boundsMaxMm": [
+        65.36,
+        26.09,
+        33.5
+      ]
+    },
+    {
+      "index": 5,
+      "id": "MM425_BP51969",
+      "fmaId": "FMA74912",
+      "name": "Trunk of anterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 2588,
+      "vertexCount": 458,
+      "indexOffset": 15468,
+      "indexCount": 2736,
+      "centroidMm": [
+        66.85,
+        -9.41,
+        41.03
+      ],
+      "boundsMinMm": [
+        62.49,
+        -35.03,
+        31.21
+      ],
+      "boundsMaxMm": [
+        71.11,
+        12.05,
+        46.26
+      ]
+    },
+    {
+      "index": 6,
+      "id": "MM426_BP51973",
+      "fmaId": "FMA74923",
+      "name": "Trunk of circumflex branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 3046,
+      "vertexCount": 384,
+      "indexOffset": 18204,
+      "indexCount": 2292,
+      "centroidMm": [
+        55.36,
+        23.28,
+        -13.2
+      ],
+      "boundsMinMm": [
+        49.47,
+        9.16,
+        -30.6
+      ],
+      "boundsMaxMm": [
+        58.43,
+        32.22,
+        5.03
+      ]
+    },
+    {
+      "index": 7,
+      "id": "MM428_BP51610",
+      "fmaId": "FMA3914",
+      "name": "First posterior ventricular branch of circumflex coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 3430,
+      "vertexCount": 1084,
+      "indexOffset": 20496,
+      "indexCount": 6492,
+      "centroidMm": [
+        65.08,
+        -24.67,
+        -23.94
+      ],
+      "boundsMinMm": [
+        50.62,
+        -43.14,
+        -37.69
+      ],
+      "boundsMaxMm": [
+        83.12,
+        2.0,
+        -4.15
+      ]
+    },
+    {
+      "index": 8,
+      "id": "MM430_BP58390",
+      "fmaId": "FMA79742",
+      "name": "Trunk of posterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 4514,
+      "vertexCount": 558,
+      "indexOffset": 26988,
+      "indexCount": 3336,
+      "centroidMm": [
+        39.87,
+        -41.48,
+        7.03
+      ],
+      "boundsMinMm": [
+        26.03,
+        -46.88,
+        -15.48
+      ],
+      "boundsMaxMm": [
+        59.35,
+        -31.58,
+        27.07
+      ]
+    },
+    {
+      "index": 9,
+      "id": "MM431_BP51614",
+      "fmaId": "FMA3893",
+      "name": "Anterior septal branch of anterior interventricular artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 5072,
+      "vertexCount": 645,
+      "indexOffset": 30324,
+      "indexCount": 3858,
+      "centroidMm": [
+        43.3,
+        13.87,
+        16.75
+      ],
+      "boundsMinMm": [
+        27.26,
+        3.31,
+        10.64
+      ],
+      "boundsMaxMm": [
+        59.17,
+        27.67,
+        20.92
+      ]
+    },
+    {
+      "index": 10,
+      "id": "MM432_BP51962",
+      "fmaId": "FMA3890",
+      "name": "Third left anterior branch of anterior interventricular branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 5717,
+      "vertexCount": 963,
+      "indexOffset": 34182,
+      "indexCount": 5766,
+      "centroidMm": [
+        81.38,
+        -6.42,
+        40.55
+      ],
+      "boundsMinMm": [
+        65.59,
+        -13.42,
+        36.2
+      ],
+      "boundsMaxMm": [
+        93.86,
+        -1.93,
+        43.68
+      ]
+    },
+    {
+      "index": 11,
+      "id": "MM433_BP51614",
+      "fmaId": "FMA3893",
+      "name": "Anterior septal branch of anterior interventricular artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 6680,
+      "vertexCount": 1123,
+      "indexOffset": 39948,
+      "indexCount": 6726,
+      "centroidMm": [
+        54.84,
+        1.57,
+        34.48
+      ],
+      "boundsMinMm": [
+        45.38,
+        -8.14,
+        30.18
+      ],
+      "boundsMaxMm": [
+        64.99,
+        7.15,
+        37.66
+      ]
+    },
+    {
+      "index": 12,
+      "id": "MM434_BP51614",
+      "fmaId": "FMA3893",
+      "name": "Anterior septal branch of anterior interventricular artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 7803,
+      "vertexCount": 1093,
+      "indexOffset": 46674,
+      "indexCount": 6546,
+      "centroidMm": [
+        56.25,
+        -13.22,
+        38.34
+      ],
+      "boundsMinMm": [
+        45.25,
+        -19.52,
+        31.44
+      ],
+      "boundsMaxMm": [
+        69.12,
+        -10.27,
+        44.5
+      ]
+    },
+    {
+      "index": 13,
+      "id": "MM436_BP51977",
+      "fmaId": "FMA3802",
+      "name": "Trunk of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 8896,
+      "vertexCount": 389,
+      "indexOffset": 53220,
+      "indexCount": 2322,
+      "centroidMm": [
+        0.98,
+        -6.94,
+        30.02
+      ],
+      "boundsMinMm": [
+        -2.91,
+        -17.7,
+        23.66
+      ],
+      "boundsMaxMm": [
+        6.28,
+        4.2,
+        34.17
+      ]
+    },
+    {
+      "index": 14,
+      "id": "MM437_BP51980",
+      "fmaId": "FMA3815",
+      "name": "First anterior ventricular branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 9285,
+      "vertexCount": 898,
+      "indexOffset": 55542,
+      "indexCount": 5376,
+      "centroidMm": [
+        19.88,
+        -5.14,
+        47.6
+      ],
+      "boundsMinMm": [
+        2.53,
+        -14.8,
+        30.82
+      ],
+      "boundsMaxMm": [
+        40.01,
+        3.85,
+        57.08
+      ]
+    },
+    {
+      "index": 15,
+      "id": "MM438_BP51957",
+      "fmaId": "FMA3829",
+      "name": "Anterior atrial branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 10183,
+      "vertexCount": 322,
+      "indexOffset": 60918,
+      "indexCount": 1920,
+      "centroidMm": [
+        11.96,
+        32.09,
+        15.06
+      ],
+      "boundsMinMm": [
+        -0.34,
+        16.96,
+        12.28
+      ],
+      "boundsMaxMm": [
+        21.33,
+        43.69,
+        20.97
+      ]
+    },
+    {
+      "index": 16,
+      "id": "MM439_BP51977",
+      "fmaId": "FMA3802",
+      "name": "Trunk of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 10505,
+      "vertexCount": 703,
+      "indexOffset": 62838,
+      "indexCount": 4206,
+      "centroidMm": [
+        4.28,
+        -22.87,
+        15.56
+      ],
+      "boundsMinMm": [
+        -2.78,
+        -28.08,
+        4.14
+      ],
+      "boundsMaxMm": [
+        14.27,
+        -16.4,
+        26.06
+      ]
+    },
+    {
+      "index": 17,
+      "id": "MM440_BP51950",
+      "fmaId": "FMA3818",
+      "name": "Marginal branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 11208,
+      "vertexCount": 715,
+      "indexOffset": 67044,
+      "indexCount": 4278,
+      "centroidMm": [
+        21.94,
+        -27.52,
+        39.09
+      ],
+      "boundsMinMm": [
+        -2.51,
+        -36.96,
+        22.96
+      ],
+      "boundsMaxMm": [
+        46.94,
+        -16.49,
+        50.22
+      ]
+    },
+    {
+      "index": 18,
+      "id": "MM441_BP51977",
+      "fmaId": "FMA3802",
+      "name": "Trunk of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 11923,
+      "vertexCount": 656,
+      "indexOffset": 71322,
+      "indexCount": 3924,
+      "centroidMm": [
+        26.51,
+        17.79,
+        41.23
+      ],
+      "boundsMinMm": [
+        14.84,
+        12.66,
+        19.5
+      ],
+      "boundsMaxMm": [
+        45.78,
+        26.12,
+        53.03
+      ]
+    },
+    {
+      "index": 19,
+      "id": "MM443_BP51952",
+      "fmaId": "FMA3851",
+      "name": "Atrioventricular node branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 12579,
+      "vertexCount": 1761,
+      "indexOffset": 75246,
+      "indexCount": 10554,
+      "centroidMm": [
+        17.48,
+        -15.97,
+        0.55
+      ],
+      "boundsMinMm": [
+        11.15,
+        -27.53,
+        -3.08
+      ],
+      "boundsMaxMm": [
+        20.68,
+        -2.29,
+        7.66
+      ]
+    },
+    {
+      "index": 20,
+      "id": "MM444_BP51956",
+      "fmaId": "FMA3837",
+      "name": "First posterior ventricular branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 14340,
+      "vertexCount": 477,
+      "indexOffset": 85800,
+      "indexCount": 2850,
+      "centroidMm": [
+        34.34,
+        -39.68,
+        12.91
+      ],
+      "boundsMinMm": [
+        13.13,
+        -47.42,
+        2.28
+      ],
+      "boundsMaxMm": [
+        57.37,
+        -25.63,
+        30.82
+      ]
+    },
+    {
+      "index": 21,
+      "id": "MM445_BP51957",
+      "fmaId": "FMA3829",
+      "name": "Anterior atrial branch of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 14817,
+      "vertexCount": 446,
+      "indexOffset": 88650,
+      "indexCount": 2664,
+      "centroidMm": [
+        -9.67,
+        -8.12,
+        23.05
+      ],
+      "boundsMinMm": [
+        -18.8,
+        -11.52,
+        14.94
+      ],
+      "boundsMaxMm": [
+        0.46,
+        -0.62,
+        30.08
+      ]
+    },
+    {
+      "index": 22,
+      "id": "MM446_BP58391",
+      "fmaId": "FMA76767",
+      "name": "Anterior cardiac vein",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 15263,
+      "vertexCount": 739,
+      "indexOffset": 91314,
+      "indexCount": 4422,
+      "centroidMm": [
+        15.12,
+        -5.91,
+        47.0
+      ],
+      "boundsMinMm": [
+        -5.75,
+        -15.79,
+        27.34
+      ],
+      "boundsMaxMm": [
+        36.22,
+        4.07,
+        57.22
+      ]
+    },
+    {
+      "index": 23,
+      "id": "MM447_BP51947",
+      "fmaId": "FMA4707",
+      "name": "Great cardiac vein",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 16002,
+      "vertexCount": 2293,
+      "indexOffset": 95736,
+      "indexCount": 13734,
+      "centroidMm": [
+        70.21,
+        10.04,
+        9.73
+      ],
+      "boundsMinMm": [
+        53.23,
+        -26.01,
+        -39.3
+      ],
+      "boundsMaxMm": [
+        93.37,
+        29.05,
+        45.95
+      ]
+    },
+    {
+      "index": 24,
+      "id": "MM448_BP51947",
+      "fmaId": "FMA4707",
+      "name": "Great cardiac vein",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 18295,
+      "vertexCount": 1294,
+      "indexOffset": 109470,
+      "indexCount": 7752,
+      "centroidMm": [
+        82.32,
+        -0.59,
+        -7.88
+      ],
+      "boundsMinMm": [
+        59.1,
+        -18.6,
+        -32.39
+      ],
+      "boundsMaxMm": [
+        95.1,
+        13.64,
+        21.97
+      ]
+    },
+    {
+      "index": 25,
+      "id": "MM449_BP51994",
+      "fmaId": "FMA4713",
+      "name": "Middle cardiac vein",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 19589,
+      "vertexCount": 485,
+      "indexOffset": 117222,
+      "indexCount": 2898,
+      "centroidMm": [
+        32.23,
+        -33.66,
+        3.17
+      ],
+      "boundsMinMm": [
+        17.65,
+        -43.63,
+        -13.34
+      ],
+      "boundsMaxMm": [
+        54.12,
+        -18.7,
+        23.88
+      ]
+    },
+    {
+      "index": 26,
+      "id": "MM451_BP51932",
+      "fmaId": "FMA4716",
+      "name": "Right marginal vein",
+      "structureId": 1,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 20074,
+      "vertexCount": 606,
+      "indexOffset": 120120,
+      "indexCount": 3624,
+      "centroidMm": [
+        13.03,
+        -26.52,
+        35.51
+      ],
+      "boundsMinMm": [
+        -2.12,
+        -31.32,
+        21.77
+      ],
+      "boundsMaxMm": [
+        30.48,
+        -19.98,
+        51.37
+      ]
+    },
+    {
+      "index": 27,
+      "id": "MM452_BP51951",
+      "fmaId": "FMA4706",
+      "name": "Coronary sinus",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 20680,
+      "vertexCount": 964,
+      "indexOffset": 123744,
+      "indexCount": 5772,
+      "centroidMm": [
+        8.9,
+        -20.25,
+        17.91
+      ],
+      "boundsMinMm": [
+        -2.07,
+        -29.59,
+        -9.35
+      ],
+      "boundsMaxMm": [
+        22.12,
+        -10.83,
+        46.15
+      ]
+    },
+    {
+      "index": 28,
+      "id": "MM456_BP51862",
+      "fmaId": "FMA9306",
+      "name": "Lateral wall of left atrium",
+      "structureId": 27,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 21644,
+      "vertexCount": 1272,
+      "indexOffset": 129516,
+      "indexCount": 7644,
+      "centroidMm": [
+        50.77,
+        22.78,
+        -35.58
+      ],
+      "boundsMinMm": [
+        37.51,
+        -6.06,
+        -49.39
+      ],
+      "boundsMaxMm": [
+        59.68,
+        43.51,
+        -10.5
+      ]
+    },
+    {
+      "index": 29,
+      "id": "MM458_BP51886",
+      "fmaId": "FMA84095",
+      "name": "Septal wall of left atrium",
+      "structureId": 12,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#B85D5D",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 22916,
+      "vertexCount": 1143,
+      "indexOffset": 137160,
+      "indexCount": 6870,
+      "centroidMm": [
+        0.26,
+        8.58,
+        -30.59
+      ],
+      "boundsMinMm": [
+        -8.26,
+        -14.55,
+        -43.93
+      ],
+      "boundsMaxMm": [
+        12.79,
+        34.44,
+        -17.31
+      ]
+    },
+    {
+      "index": 30,
+      "id": "MM459_BP51840",
+      "fmaId": "FMA9547",
+      "name": "Wall of left auricle",
+      "structureId": 28,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 24059,
+      "vertexCount": 2477,
+      "indexOffset": 144030,
+      "indexCount": 14814,
+      "centroidMm": [
+        58.79,
+        34.22,
+        2.46
+      ],
+      "boundsMinMm": [
+        35.42,
+        17.79,
+        -25.13
+      ],
+      "boundsMaxMm": [
+        76.95,
+        50.24,
+        30.84
+      ]
+    },
+    {
+      "index": 31,
+      "id": "MM460_BP51732",
+      "fmaId": "FMA9562",
+      "name": "Superior wall of left atrium",
+      "structureId": 27,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 26536,
+      "vertexCount": 791,
+      "indexOffset": 158844,
+      "indexCount": 4734,
+      "centroidMm": [
+        22.44,
+        35.89,
+        -27.09
+      ],
+      "boundsMinMm": [
+        5.41,
+        25.81,
+        -43.56
+      ],
+      "boundsMaxMm": [
+        40.06,
+        43.77,
+        -10.7
+      ]
+    },
+    {
+      "index": 32,
+      "id": "MM461_BP51819",
+      "fmaId": "FMA49299",
+      "name": "Wall of right auricle proper",
+      "structureId": 2,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 27327,
+      "vertexCount": 1170,
+      "indexOffset": 163578,
+      "indexCount": 7008,
+      "centroidMm": [
+        1.96,
+        20.4,
+        25.62
+      ],
+      "boundsMinMm": [
+        -18.17,
+        -11.37,
+        10.22
+      ],
+      "boundsMaxMm": [
+        20.1,
+        44.03,
+        42.96
+      ]
+    },
+    {
+      "index": 33,
+      "id": "MM462_BP51838",
+      "fmaId": "FMA9236",
+      "name": "Crista terminalis",
+      "structureId": 3,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 28497,
+      "vertexCount": 1009,
+      "indexOffset": 170586,
+      "indexCount": 6090,
+      "centroidMm": [
+        -3.4,
+        21.21,
+        13.49
+      ],
+      "boundsMinMm": [
+        -17.41,
+        -14.81,
+        7.94
+      ],
+      "boundsMaxMm": [
+        16.98,
+        42.26,
+        19.47
+      ]
+    },
+    {
+      "index": 34,
+      "id": "MM463_BP51689",
+      "fmaId": "FMA9240",
+      "name": "Valve of inferior vena cava",
+      "structureId": 6,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 29506,
+      "vertexCount": 811,
+      "indexOffset": 176676,
+      "indexCount": 4854,
+      "centroidMm": [
+        4.99,
+        -18.98,
+        -0.21
+      ],
+      "boundsMinMm": [
+        -15.03,
+        -29.26,
+        -13.16
+      ],
+      "boundsMaxMm": [
+        20.71,
+        -4.07,
+        12.33
+      ]
+    },
+    {
+      "index": 35,
+      "id": "MM466_BP51829",
+      "fmaId": "FMA49298",
+      "name": "Pectinate muscle of right auricle",
+      "structureId": 2,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 30317,
+      "vertexCount": 2283,
+      "indexOffset": 181530,
+      "indexCount": 14346,
+      "centroidMm": [
+        2.19,
+        19.7,
+        25.88
+      ],
+      "boundsMinMm": [
+        -15.06,
+        -10.03,
+        10.79
+      ],
+      "boundsMaxMm": [
+        18.38,
+        41.23,
+        41.33
+      ]
+    },
+    {
+      "index": 36,
+      "id": "MM467_BP51841",
+      "fmaId": "FMA9277",
+      "name": "Tendon of Todaro",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 32600,
+      "vertexCount": 348,
+      "indexOffset": 195876,
+      "indexCount": 2076,
+      "centroidMm": [
+        20.7,
+        -0.87,
+        -4.61
+      ],
+      "boundsMinMm": [
+        17.99,
+        -7.53,
+        -10.06
+      ],
+      "boundsMaxMm": [
+        22.49,
+        4.64,
+        3.14
+      ]
+    },
+    {
+      "index": 37,
+      "id": "MM474_BP51876",
+      "fmaId": "FMA84850",
+      "name": "Free wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 32948,
+      "vertexCount": 2777,
+      "indexOffset": 197952,
+      "indexCount": 16590,
+      "centroidMm": [
+        61.94,
+        -12.41,
+        4.9
+      ],
+      "boundsMinMm": [
+        20.65,
+        -46.78,
+        -36.48
+      ],
+      "boundsMaxMm": [
+        92.34,
+        28.09,
+        45.55
+      ]
+    },
+    {
+      "index": 38,
+      "id": "MM506_BP51985",
+      "fmaId": "FMA23733",
+      "name": "Ascending aorta proper",
+      "structureId": 25,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 35725,
+      "vertexCount": 1342,
+      "indexOffset": 214542,
+      "indexCount": 8052,
+      "centroidMm": [
+        23.53,
+        40.06,
+        3.82
+      ],
+      "boundsMinMm": [
+        8.46,
+        23.47,
+        -10.42
+      ],
+      "boundsMaxMm": [
+        39.78,
+        54.47,
+        16.78
+      ]
+    },
+    {
+      "index": 39,
+      "id": "MM514_BP51916",
+      "fmaId": "FMA84617",
+      "name": "Right posterior semilunar fibrous scallop of aortic valve anulus",
+      "structureId": 22,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 37067,
+      "vertexCount": 633,
+      "indexOffset": 222594,
+      "indexCount": 3786,
+      "centroidMm": [
+        24.66,
+        11.52,
+        -4.09
+      ],
+      "boundsMinMm": [
+        19.37,
+        4.34,
+        -14.35
+      ],
+      "boundsMaxMm": [
+        29.31,
+        25.25,
+        10.1
+      ]
+    },
+    {
+      "index": 40,
+      "id": "MM515_BP51677",
+      "fmaId": "FMA84616",
+      "name": "Left posterior semilunar fibrous scallop of aortic valve anulus",
+      "structureId": 24,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 37700,
+      "vertexCount": 528,
+      "indexOffset": 226380,
+      "indexCount": 3156,
+      "centroidMm": [
+        40.09,
+        21.53,
+        -4.43
+      ],
+      "boundsMinMm": [
+        26.81,
+        17.43,
+        -15.07
+      ],
+      "boundsMaxMm": [
+        48.44,
+        29.06,
+        10.92
+      ]
+    },
+    {
+      "index": 41,
+      "id": "MM516_BP51924",
+      "fmaId": "FMA9502",
+      "name": "Fibrous ring of aortic valve",
+      "structureId": 23,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 38228,
+      "vertexCount": 536,
+      "indexOffset": 229536,
+      "indexCount": 3204,
+      "centroidMm": [
+        33.95,
+        14.97,
+        12.16
+      ],
+      "boundsMinMm": [
+        20.03,
+        7.92,
+        9.26
+      ],
+      "boundsMaxMm": [
+        42.77,
+        27.97,
+        14.7
+      ]
+    },
+    {
+      "index": 42,
+      "id": "MM517_BP51924",
+      "fmaId": "FMA9502",
+      "name": "Fibrous ring of aortic valve",
+      "structureId": 23,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 38764,
+      "vertexCount": 451,
+      "indexOffset": 232740,
+      "indexCount": 2694,
+      "centroidMm": [
+        31.28,
+        16.0,
+        -14.16
+      ],
+      "boundsMinMm": [
+        26.7,
+        9.86,
+        -15.66
+      ],
+      "boundsMaxMm": [
+        37.82,
+        22.53,
+        -12.11
+      ]
+    },
+    {
+      "index": 43,
+      "id": "MM519_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 39215,
+      "vertexCount": 539,
+      "indexOffset": 235434,
+      "indexCount": 3222,
+      "centroidMm": [
+        27.88,
+        11.94,
+        -1.89
+      ],
+      "boundsMinMm": [
+        20.48,
+        5.01,
+        -13.53
+      ],
+      "boundsMaxMm": [
+        33.44,
+        25.4,
+        8.86
+      ]
+    },
+    {
+      "index": 44,
+      "id": "MM520_BP51924",
+      "fmaId": "FMA9502",
+      "name": "Fibrous ring of aortic valve",
+      "structureId": 23,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 39754,
+      "vertexCount": 748,
+      "indexOffset": 238656,
+      "indexCount": 4476,
+      "centroidMm": [
+        44.38,
+        20.01,
+        9.21
+      ],
+      "boundsMinMm": [
+        41.31,
+        14.48,
+        2.83
+      ],
+      "boundsMaxMm": [
+        48.18,
+        26.44,
+        13.43
+      ]
+    },
+    {
+      "index": 45,
+      "id": "MM521_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 40502,
+      "vertexCount": 272,
+      "indexOffset": 243132,
+      "indexCount": 1620,
+      "centroidMm": [
+        38.3,
+        19.06,
+        -2.95
+      ],
+      "boundsMinMm": [
+        27.22,
+        13.32,
+        -14.29
+      ],
+      "boundsMaxMm": [
+        48.26,
+        28.18,
+        9.66
+      ]
+    },
+    {
+      "index": 46,
+      "id": "MM524_BP51927",
+      "fmaId": "FMA7253",
+      "name": "Anterior cusp of aortic valve",
+      "structureId": 23,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 40774,
+      "vertexCount": 363,
+      "indexOffset": 244752,
+      "indexCount": 2166,
+      "centroidMm": [
+        33.88,
+        15.0,
+        9.42
+      ],
+      "boundsMinMm": [
+        20.16,
+        8.25,
+        3.11
+      ],
+      "boundsMaxMm": [
+        42.62,
+        28.5,
+        14.69
+      ]
+    },
+    {
+      "index": 47,
+      "id": "MM526_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 41137,
+      "vertexCount": 984,
+      "indexOffset": 246918,
+      "indexCount": 5892,
+      "centroidMm": [
+        43.22,
+        17.13,
+        -15.98
+      ],
+      "boundsMinMm": [
+        35.56,
+        14.09,
+        -22.07
+      ],
+      "boundsMaxMm": [
+        48.19,
+        20.42,
+        -8.52
+      ]
+    },
+    {
+      "index": 48,
+      "id": "MM529_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 42121,
+      "vertexCount": 9128,
+      "indexOffset": 252810,
+      "indexCount": 54768,
+      "centroidMm": [
+        35.46,
+        -1.84,
+        -21.17
+      ],
+      "boundsMinMm": [
+        21.29,
+        -17.17,
+        -34.23
+      ],
+      "boundsMaxMm": [
+        49.71,
+        17.5,
+        -5.2
+      ]
+    },
+    {
+      "index": 49,
+      "id": "MM532_BP51848",
+      "fmaId": "FMA7272",
+      "name": "Septomarginal trabecula",
+      "structureId": 17,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 51249,
+      "vertexCount": 913,
+      "indexOffset": 307578,
+      "indexCount": 5466,
+      "centroidMm": [
+        40.21,
+        -18.19,
+        38.94
+      ],
+      "boundsMinMm": [
+        31.83,
+        -26.53,
+        33.46
+      ],
+      "boundsMaxMm": [
+        49.57,
+        -6.01,
+        43.41
+      ]
+    },
+    {
+      "index": 50,
+      "id": "MM534_BP51828",
+      "fmaId": "FMA13258",
+      "name": "Mural limb of supraventricular crest",
+      "structureId": 19,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 52162,
+      "vertexCount": 395,
+      "indexOffset": 313044,
+      "indexCount": 2358,
+      "centroidMm": [
+        26.63,
+        12.54,
+        19.7
+      ],
+      "boundsMinMm": [
+        14.3,
+        6.45,
+        13.69
+      ],
+      "boundsMaxMm": [
+        39.5,
+        21.15,
+        24.9
+      ]
+    },
+    {
+      "index": 51,
+      "id": "MM537_BP51810",
+      "fmaId": "FMA7262",
+      "name": "Septal papillary muscle of right ventricle",
+      "structureId": 18,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 52557,
+      "vertexCount": 1395,
+      "indexOffset": 315402,
+      "indexCount": 8358,
+      "centroidMm": [
+        44.02,
+        -3.52,
+        29.3
+      ],
+      "boundsMinMm": [
+        34.1,
+        -7.31,
+        21.81
+      ],
+      "boundsMaxMm": [
+        50.94,
+        0.06,
+        36.25
+      ]
+    },
+    {
+      "index": 52,
+      "id": "MM538_BP51878",
+      "fmaId": "FMA49208",
+      "name": "Wall of outflow part of right ventricle",
+      "structureId": 19,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 53952,
+      "vertexCount": 721,
+      "indexOffset": 323760,
+      "indexCount": 4326,
+      "centroidMm": [
+        41.88,
+        16.29,
+        33.58
+      ],
+      "boundsMinMm": [
+        13.9,
+        -3.15,
+        12.66
+      ],
+      "boundsMaxMm": [
+        64.63,
+        35.75,
+        54.0
+      ]
+    },
+    {
+      "index": 53,
+      "id": "MM541_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 54673,
+      "vertexCount": 4814,
+      "indexOffset": 328086,
+      "indexCount": 16536,
+      "centroidMm": [
+        42.08,
+        -1.7,
+        -6.57
+      ],
+      "boundsMinMm": [
+        22.38,
+        -15.39,
+        -17.81
+      ],
+      "boundsMaxMm": [
+        59.78,
+        16.6,
+        0.72
+      ]
+    },
+    {
+      "index": 54,
+      "id": "MM542_BP51876",
+      "fmaId": "FMA84850",
+      "name": "Free wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 59487,
+      "vertexCount": 13118,
+      "indexOffset": 344622,
+      "indexCount": 58716,
+      "centroidMm": [
+        47.53,
+        -3.71,
+        -13.4
+      ],
+      "boundsMinMm": [
+        21.91,
+        -16.98,
+        -33.08
+      ],
+      "boundsMaxMm": [
+        59.85,
+        16.65,
+        0.73
+      ]
+    },
+    {
+      "index": 55,
+      "id": "MM543_BP51899",
+      "fmaId": "FMA9498",
+      "name": "Fibrous ring of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 72605,
+      "vertexCount": 4814,
+      "indexOffset": 403338,
+      "indexCount": 16536,
+      "centroidMm": [
+        42.08,
+        -1.7,
+        -6.57
+      ],
+      "boundsMinMm": [
+        22.38,
+        -15.39,
+        -17.81
+      ],
+      "boundsMaxMm": [
+        59.78,
+        16.6,
+        0.72
+      ]
+    },
+    {
+      "index": 56,
+      "id": "MM544_BP51876",
+      "fmaId": "FMA84850",
+      "name": "Free wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 77419,
+      "vertexCount": 13118,
+      "indexOffset": 419874,
+      "indexCount": 58716,
+      "centroidMm": [
+        47.53,
+        -3.71,
+        -13.4
+      ],
+      "boundsMinMm": [
+        21.91,
+        -16.98,
+        -33.08
+      ],
+      "boundsMaxMm": [
+        59.85,
+        16.65,
+        0.73
+      ]
+    },
+    {
+      "index": 57,
+      "id": "MM550_BP51861",
+      "fmaId": "FMA49207",
+      "name": "Wall of inflow part of right ventricle",
+      "structureId": 16,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 90537,
+      "vertexCount": 1395,
+      "indexOffset": 478590,
+      "indexCount": 8358,
+      "centroidMm": [
+        31.11,
+        -22.56,
+        38.86
+      ],
+      "boundsMinMm": [
+        21.2,
+        -29.32,
+        29.01
+      ],
+      "boundsMaxMm": [
+        38.26,
+        -12.42,
+        48.37
+      ]
+    },
+    {
+      "index": 58,
+      "id": "MM551_BP51861",
+      "fmaId": "FMA49207",
+      "name": "Wall of inflow part of right ventricle",
+      "structureId": 16,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 91932,
+      "vertexCount": 1434,
+      "indexOffset": 486948,
+      "indexCount": 8586,
+      "centroidMm": [
+        40.94,
+        -25.49,
+        23.81
+      ],
+      "boundsMinMm": [
+        29.18,
+        -30.68,
+        20.58
+      ],
+      "boundsMaxMm": [
+        51.64,
+        -19.29,
+        30.05
+      ]
+    },
+    {
+      "index": 59,
+      "id": "MM556_BP51977",
+      "fmaId": "FMA3802",
+      "name": "Trunk of right coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 93366,
+      "vertexCount": 535,
+      "indexOffset": 495534,
+      "indexCount": 3198,
+      "centroidMm": [
+        16.1,
+        13.44,
+        25.16
+      ],
+      "boundsMinMm": [
+        3.28,
+        2.82,
+        15.98
+      ],
+      "boundsMaxMm": [
+        30.56,
+        18.4,
+        34.24
+      ]
+    },
+    {
+      "index": 60,
+      "id": "MM557_BP58405",
+      "fmaId": "FMA4685",
+      "name": "Stem of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 93901,
+      "vertexCount": 252,
+      "indexOffset": 498732,
+      "indexCount": 1500,
+      "centroidMm": [
+        47.84,
+        28.97,
+        3.06
+      ],
+      "boundsMinMm": [
+        43.36,
+        26.33,
+        -1.91
+      ],
+      "boundsMaxMm": [
+        52.3,
+        31.39,
+        7.28
+      ]
+    },
+    {
+      "index": 61,
+      "id": "MM558_BP51975",
+      "fmaId": "FMA15098",
+      "name": "Wall of bulb of aorta",
+      "structureId": 25,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 94153,
+      "vertexCount": 1940,
+      "indexOffset": 500232,
+      "indexCount": 11664,
+      "centroidMm": [
+        30.93,
+        20.97,
+        2.65
+      ],
+      "boundsMinMm": [
+        16.27,
+        4.83,
+        -14.85
+      ],
+      "boundsMaxMm": [
+        48.63,
+        33.67,
+        18.33
+      ]
+    },
+    {
+      "index": 62,
+      "id": "MM559_BP51843",
+      "fmaId": "FMA49285",
+      "name": "Anterior wall proper of right atrium",
+      "structureId": 1,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 96093,
+      "vertexCount": 849,
+      "indexOffset": 511896,
+      "indexCount": 5082,
+      "centroidMm": [
+        4.48,
+        7.46,
+        16.37
+      ],
+      "boundsMinMm": [
+        -9.26,
+        -34.66,
+        4.39
+      ],
+      "boundsMaxMm": [
+        21.75,
+        53.56,
+        30.59
+      ]
+    },
+    {
+      "index": 63,
+      "id": "MM560_BP51837",
+      "fmaId": "FMA49286",
+      "name": "Lateral wall proper of right atrium",
+      "structureId": 1,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 96942,
+      "vertexCount": 3013,
+      "indexOffset": 516978,
+      "indexCount": 18066,
+      "centroidMm": [
+        -12.3,
+        7.87,
+        -4.05
+      ],
+      "boundsMinMm": [
+        -21.33,
+        -35.09,
+        -22.95
+      ],
+      "boundsMaxMm": [
+        -2.35,
+        54.71,
+        25.28
+      ]
+    },
+    {
+      "index": 64,
+      "id": "MM562_BP51846",
+      "fmaId": "FMA9242",
+      "name": "Valve of coronary sinus",
+      "structureId": 9,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#F8FAFC",
+      "renderOrder": 2,
+      "vertexOffset": 99955,
+      "vertexCount": 984,
+      "indexOffset": 535044,
+      "indexCount": 5892,
+      "centroidMm": [
+        17.37,
+        -13.07,
+        -7.4
+      ],
+      "boundsMinMm": [
+        13.38,
+        -18.74,
+        -10.95
+      ],
+      "boundsMaxMm": [
+        22.03,
+        -3.87,
+        -3.28
+      ]
+    },
+    {
+      "index": 65,
+      "id": "MM563_BP51712",
+      "fmaId": "FMA13257",
+      "name": "Septal limb of supraventricular crest",
+      "structureId": 19,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 100939,
+      "vertexCount": 1630,
+      "indexOffset": 540936,
+      "indexCount": 9768,
+      "centroidMm": [
+        43.27,
+        2.41,
+        28.23
+      ],
+      "boundsMinMm": [
+        27.49,
+        -15.57,
+        11.08
+      ],
+      "boundsMaxMm": [
+        59.14,
+        22.99,
+        47.81
+      ]
+    },
+    {
+      "index": 66,
+      "id": "MM564_BP51832",
+      "fmaId": "FMA7270",
+      "name": "Trabecula carnea of right ventricle",
+      "structureId": 16,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 102569,
+      "vertexCount": 3591,
+      "indexOffset": 550704,
+      "indexCount": 21690,
+      "centroidMm": [
+        36.88,
+        -19.89,
+        28.28
+      ],
+      "boundsMinMm": [
+        10.78,
+        -34.39,
+        8.56
+      ],
+      "boundsMaxMm": [
+        60.81,
+        6.11,
+        48.59
+      ]
+    },
+    {
+      "index": 67,
+      "id": "MM568_BP51893",
+      "fmaId": "FMA83468",
+      "name": "Membranous part of interventricular septum proper",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 106160,
+      "vertexCount": 2531,
+      "indexOffset": 572394,
+      "indexCount": 15174,
+      "centroidMm": [
+        27.14,
+        4.19,
+        8.01
+      ],
+      "boundsMinMm": [
+        22.19,
+        -2.65,
+        0.57
+      ],
+      "boundsMaxMm": [
+        31.49,
+        10.11,
+        14.43
+      ]
+    },
+    {
+      "index": 68,
+      "id": "MM569_BP51701",
+      "fmaId": "FMA7238",
+      "name": "Anterior leaflet of tricuspid valve",
+      "structureId": 13,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 108691,
+      "vertexCount": 4205,
+      "indexOffset": 587568,
+      "indexCount": 14967,
+      "centroidMm": [
+        24.18,
+        -3.17,
+        25.42
+      ],
+      "boundsMinMm": [
+        3.79,
+        -13.79,
+        12.22
+      ],
+      "boundsMaxMm": [
+        35.82,
+        10.92,
+        30.81
+      ]
+    },
+    {
+      "index": 69,
+      "id": "MM570_BP51920",
+      "fmaId": "FMA7239",
+      "name": "Posterior leaflet of tricuspid valve",
+      "structureId": 15,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 112896,
+      "vertexCount": 4202,
+      "indexOffset": 602535,
+      "indexCount": 14412,
+      "centroidMm": [
+        19.35,
+        -16.22,
+        24.02
+      ],
+      "boundsMinMm": [
+        -1.68,
+        -21.36,
+        6.34
+      ],
+      "boundsMaxMm": [
+        30.41,
+        -1.95,
+        30.82
+      ]
+    },
+    {
+      "index": 70,
+      "id": "MM571_BP51920",
+      "fmaId": "FMA7239",
+      "name": "Posterior leaflet of tricuspid valve",
+      "structureId": 15,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 117098,
+      "vertexCount": 4204,
+      "indexOffset": 616947,
+      "indexCount": 14424,
+      "centroidMm": [
+        19.35,
+        -16.22,
+        24.02
+      ],
+      "boundsMinMm": [
+        -1.68,
+        -21.36,
+        6.34
+      ],
+      "boundsMaxMm": [
+        30.41,
+        -1.95,
+        30.82
+      ]
+    },
+    {
+      "index": 71,
+      "id": "MM572_BP51918",
+      "fmaId": "FMA85237",
+      "name": "Anulus proper of tricuspid valve",
+      "structureId": 7,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 121302,
+      "vertexCount": 1524,
+      "indexOffset": 631371,
+      "indexCount": 9144,
+      "centroidMm": [
+        12.98,
+        -5.52,
+        14.11
+      ],
+      "boundsMinMm": [
+        -1.75,
+        -22.41,
+        -1.43
+      ],
+      "boundsMaxMm": [
+        25.66,
+        12.55,
+        29.88
+      ]
+    },
+    {
+      "index": 72,
+      "id": "MM573_BP51943",
+      "fmaId": "FMA7240",
+      "name": "Septal leaflet of tricuspid valve",
+      "structureId": 14,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 122826,
+      "vertexCount": 4057,
+      "indexOffset": 640515,
+      "indexCount": 13932,
+      "centroidMm": [
+        29.45,
+        -10.59,
+        17.32
+      ],
+      "boundsMinMm": [
+        13.54,
+        -21.14,
+        -0.98
+      ],
+      "boundsMaxMm": [
+        36.03,
+        9.91,
+        22.83
+      ]
+    },
+    {
+      "index": 73,
+      "id": "MM574_BP51943",
+      "fmaId": "FMA7240",
+      "name": "Septal leaflet of tricuspid valve",
+      "structureId": 14,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 126883,
+      "vertexCount": 4057,
+      "indexOffset": 654447,
+      "indexCount": 13932,
+      "centroidMm": [
+        29.45,
+        -10.59,
+        17.32
+      ],
+      "boundsMinMm": [
+        13.54,
+        -21.14,
+        -0.98
+      ],
+      "boundsMaxMm": [
+        36.03,
+        9.91,
+        22.83
+      ]
+    },
+    {
+      "index": 74,
+      "id": "MM575_BP51701",
+      "fmaId": "FMA7238",
+      "name": "Anterior leaflet of tricuspid valve",
+      "structureId": 13,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 130940,
+      "vertexCount": 4201,
+      "indexOffset": 668379,
+      "indexCount": 14946,
+      "centroidMm": [
+        24.19,
+        -3.17,
+        25.41
+      ],
+      "boundsMinMm": [
+        3.79,
+        -13.79,
+        12.22
+      ],
+      "boundsMaxMm": [
+        35.82,
+        10.92,
+        30.81
+      ]
+    },
+    {
+      "index": 75,
+      "id": "MM577_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 135141,
+      "vertexCount": 4157,
+      "indexOffset": 683325,
+      "indexCount": 24930,
+      "centroidMm": [
+        37.13,
+        -6.16,
+        26.97
+      ],
+      "boundsMinMm": [
+        26.66,
+        -22.62,
+        6.05
+      ],
+      "boundsMaxMm": [
+        49.25,
+        5.51,
+        40.58
+      ]
+    },
+    {
+      "index": 76,
+      "id": "MM578_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 139298,
+      "vertexCount": 907,
+      "indexOffset": 708255,
+      "indexCount": 5598,
+      "centroidMm": [
+        44.12,
+        -19.58,
+        6.78
+      ],
+      "boundsMinMm": [
+        32.86,
+        -28.05,
+        -2.75
+      ],
+      "boundsMaxMm": [
+        55.93,
+        -2.6,
+        18.35
+      ]
+    },
+    {
+      "index": 77,
+      "id": "MM579_BP51789",
+      "fmaId": "FMA83331",
+      "name": "Septal division of left branch of atrioventricular bundle",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 140205,
+      "vertexCount": 986,
+      "indexOffset": 713853,
+      "indexCount": 5928,
+      "centroidMm": [
+        45.96,
+        -11.03,
+        17.86
+      ],
+      "boundsMinMm": [
+        27.78,
+        -25.68,
+        5.88
+      ],
+      "boundsMaxMm": [
+        61.74,
+        4.35,
+        27.38
+      ]
+    },
+    {
+      "index": 78,
+      "id": "MM580_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 141191,
+      "vertexCount": 1648,
+      "indexOffset": 719781,
+      "indexCount": 9900,
+      "centroidMm": [
+        61.14,
+        1.7,
+        13.76
+      ],
+      "boundsMinMm": [
+        29.24,
+        -9.16,
+        -5.64
+      ],
+      "boundsMaxMm": [
+        75.89,
+        11.91,
+        24.62
+      ]
+    },
+    {
+      "index": 79,
+      "id": "MM582_BP51898",
+      "fmaId": "FMA7108",
+      "name": "Interatrial septum",
+      "structureId": 11,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#E8DFD1",
+      "fresnelRimHex": "#F8FAFC",
+      "renderOrder": 2,
+      "vertexOffset": 142839,
+      "vertexCount": 1094,
+      "indexOffset": 729681,
+      "indexCount": 6552,
+      "centroidMm": [
+        -2.55,
+        0.95,
+        3.21
+      ],
+      "boundsMinMm": [
+        -18.58,
+        -19.52,
+        -11.5
+      ],
+      "boundsMaxMm": [
+        23.09,
+        42.22,
+        14.69
+      ]
+    },
+    {
+      "index": 80,
+      "id": "MM583_BP51818",
+      "fmaId": "FMA9482",
+      "name": "Middle internodal tract",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 143933,
+      "vertexCount": 901,
+      "indexOffset": 736233,
+      "indexCount": 5394,
+      "centroidMm": [
+        -1.71,
+        26.58,
+        -6.71
+      ],
+      "boundsMinMm": [
+        -18.68,
+        0.72,
+        -20.94
+      ],
+      "boundsMaxMm": [
+        22.55,
+        46.81,
+        15.17
+      ]
+    },
+    {
+      "index": 81,
+      "id": "MM584_BP51875",
+      "fmaId": "FMA9480",
+      "name": "Anterior internodal tract",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 144834,
+      "vertexCount": 305,
+      "indexOffset": 741627,
+      "indexCount": 1818,
+      "centroidMm": [
+        32.52,
+        37.62,
+        -15.99
+      ],
+      "boundsMinMm": [
+        13.64,
+        28.58,
+        -26.98
+      ],
+      "boundsMaxMm": [
+        50.87,
+        42.53,
+        -10.44
+      ]
+    },
+    {
+      "index": 82,
+      "id": "MM585_BP51875",
+      "fmaId": "FMA9480",
+      "name": "Anterior internodal tract",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 145139,
+      "vertexCount": 336,
+      "indexOffset": 743445,
+      "indexCount": 2004,
+      "centroidMm": [
+        13.16,
+        27.23,
+        -2.78
+      ],
+      "boundsMinMm": [
+        2.31,
+        0.27,
+        -12.07
+      ],
+      "boundsMaxMm": [
+        22.78,
+        45.27,
+        11.83
+      ]
+    },
+    {
+      "index": 83,
+      "id": "MM586_BP51792",
+      "fmaId": "FMA9484",
+      "name": "Atrioventricular bundle",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 145475,
+      "vertexCount": 794,
+      "indexOffset": 745449,
+      "indexCount": 4752,
+      "centroidMm": [
+        25.23,
+        2.87,
+        4.33
+      ],
+      "boundsMinMm": [
+        22.03,
+        1.33,
+        0.43
+      ],
+      "boundsMaxMm": [
+        28.71,
+        4.65,
+        10.14
+      ]
+    },
+    {
+      "index": 84,
+      "id": "MM587_BP51791",
+      "fmaId": "FMA9478",
+      "name": "Atrioventricular node",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 146269,
+      "vertexCount": 1036,
+      "indexOffset": 750201,
+      "indexCount": 6204,
+      "centroidMm": [
+        22.56,
+        1.8,
+        -0.05
+      ],
+      "boundsMinMm": [
+        21.59,
+        -0.66,
+        -2.33
+      ],
+      "boundsMaxMm": [
+        23.38,
+        4.36,
+        1.98
+      ]
+    },
+    {
+      "index": 85,
+      "id": "MM590_BP51888",
+      "fmaId": "FMA84094",
+      "name": "Septal wall of right atrium",
+      "structureId": 12,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#B85D5D",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 147305,
+      "vertexCount": 3208,
+      "indexOffset": 756405,
+      "indexCount": 19236,
+      "centroidMm": [
+        10.38,
+        7.2,
+        -6.98
+      ],
+      "boundsMinMm": [
+        -3.29,
+        -35.41,
+        -22.86
+      ],
+      "boundsMaxMm": [
+        24.19,
+        53.42,
+        15.53
+      ]
+    },
+    {
+      "index": 86,
+      "id": "MM591_BP51888",
+      "fmaId": "FMA84094",
+      "name": "Septal wall of right atrium",
+      "structureId": 12,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#B85D5D",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 150513,
+      "vertexCount": 279,
+      "indexOffset": 775641,
+      "indexCount": 1662,
+      "centroidMm": [
+        21.75,
+        -5.12,
+        -2.54
+      ],
+      "boundsMinMm": [
+        18.28,
+        -17.39,
+        -9.78
+      ],
+      "boundsMaxMm": [
+        24.67,
+        6.23,
+        2.4
+      ]
+    },
+    {
+      "index": 87,
+      "id": "MM592_BP51898",
+      "fmaId": "FMA7108",
+      "name": "Interatrial septum",
+      "structureId": 11,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#E8DFD1",
+      "fresnelRimHex": "#F8FAFC",
+      "renderOrder": 2,
+      "vertexOffset": 150792,
+      "vertexCount": 1491,
+      "indexOffset": 777303,
+      "indexCount": 8934,
+      "centroidMm": [
+        13.22,
+        5.98,
+        -13.4
+      ],
+      "boundsMinMm": [
+        1.91,
+        -13.31,
+        -22.27
+      ],
+      "boundsMaxMm": [
+        21.19,
+        34.06,
+        -2.14
+      ]
+    },
+    {
+      "index": 88,
+      "id": "MM593_BP51898",
+      "fmaId": "FMA7108",
+      "name": "Interatrial septum",
+      "structureId": 11,
+      "category": "interatrial_septum",
+      "surgicalBaseHex": "#E8DFD1",
+      "fresnelRimHex": "#F8FAFC",
+      "renderOrder": 2,
+      "vertexOffset": 152283,
+      "vertexCount": 1461,
+      "indexOffset": 786237,
+      "indexCount": 8754,
+      "centroidMm": [
+        14.0,
+        0.44,
+        -13.74
+      ],
+      "boundsMinMm": [
+        2.68,
+        -13.87,
+        -22.64
+      ],
+      "boundsMaxMm": [
+        22.24,
+        18.54,
+        -3.74
+      ]
+    },
+    {
+      "index": 89,
+      "id": "MM594_BP51936",
+      "fmaId": "FMA7134",
+      "name": "Muscular part of interventricular septum",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 153744,
+      "vertexCount": 885,
+      "indexOffset": 794991,
+      "indexCount": 5298,
+      "centroidMm": [
+        25.09,
+        -3.39,
+        -2.66
+      ],
+      "boundsMinMm": [
+        21.86,
+        -11.49,
+        -7.22
+      ],
+      "boundsMaxMm": [
+        27.97,
+        0.5,
+        1.44
+      ]
+    },
+    {
+      "index": 90,
+      "id": "MM595_BP51903",
+      "fmaId": "FMA7136",
+      "name": "Atrioventricular septum",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 154629,
+      "vertexCount": 1272,
+      "indexOffset": 800289,
+      "indexCount": 7620,
+      "centroidMm": [
+        24.07,
+        2.15,
+        1.62
+      ],
+      "boundsMinMm": [
+        22.54,
+        -2.76,
+        -2.18
+      ],
+      "boundsMaxMm": [
+        26.08,
+        7.21,
+        7.02
+      ]
+    },
+    {
+      "index": 91,
+      "id": "MM596_BP51666",
+      "fmaId": "FMA9505",
+      "name": "Right fibrous trigone of heart",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 155901,
+      "vertexCount": 2035,
+      "indexOffset": 807909,
+      "indexCount": 12192,
+      "centroidMm": [
+        23.36,
+        2.85,
+        -4.2
+      ],
+      "boundsMinMm": [
+        21.44,
+        -2.62,
+        -10.34
+      ],
+      "boundsMaxMm": [
+        26.16,
+        7.65,
+        1.57
+      ]
+    },
+    {
+      "index": 92,
+      "id": "MM598_BP51861",
+      "fmaId": "FMA49207",
+      "name": "Wall of inflow part of right ventricle",
+      "structureId": 16,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 157936,
+      "vertexCount": 4282,
+      "indexOffset": 820101,
+      "indexCount": 25680,
+      "centroidMm": [
+        33.45,
+        -17.76,
+        31.35
+      ],
+      "boundsMinMm": [
+        -0.66,
+        -44.98,
+        -3.0
+      ],
+      "boundsMaxMm": [
+        66.22,
+        17.06,
+        55.09
+      ]
+    },
+    {
+      "index": 93,
+      "id": "MM599_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 162218,
+      "vertexCount": 3334,
+      "indexOffset": 845781,
+      "indexCount": 20616,
+      "centroidMm": [
+        66.34,
+        -16.04,
+        12.83
+      ],
+      "boundsMinMm": [
+        43.59,
+        -35.99,
+        -17.8
+      ],
+      "boundsMaxMm": [
+        80.7,
+        13.8,
+        37.68
+      ]
+    },
+    {
+      "index": 94,
+      "id": "MM600_BP51936",
+      "fmaId": "FMA7134",
+      "name": "Muscular part of interventricular septum",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 165552,
+      "vertexCount": 2436,
+      "indexOffset": 866397,
+      "indexCount": 14604,
+      "centroidMm": [
+        36.25,
+        -7.64,
+        12.16
+      ],
+      "boundsMinMm": [
+        23.66,
+        -41.8,
+        -3.61
+      ],
+      "boundsMaxMm": [
+        68.63,
+        13.19,
+        43.1
+      ]
+    },
+    {
+      "index": 95,
+      "id": "MM601_BP51900",
+      "fmaId": "FMA84619",
+      "name": "Right anterior semilunar fibrous scallop of pulmonary valve anulus",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 167988,
+      "vertexCount": 319,
+      "indexOffset": 881001,
+      "indexCount": 1902,
+      "centroidMm": [
+        33.84,
+        28.89,
+        25.2
+      ],
+      "boundsMinMm": [
+        28.68,
+        22.47,
+        12.46
+      ],
+      "boundsMaxMm": [
+        39.13,
+        39.74,
+        34.43
+      ]
+    },
+    {
+      "index": 96,
+      "id": "MM602_BP58389",
+      "fmaId": "FMA84625",
+      "name": "Posterior semilunar fibrous scallop of pulmonary valve anulus",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 168307,
+      "vertexCount": 854,
+      "indexOffset": 882903,
+      "indexCount": 5112,
+      "centroidMm": [
+        48.54,
+        27.33,
+        17.57
+      ],
+      "boundsMinMm": [
+        37.89,
+        20.49,
+        12.36
+      ],
+      "boundsMaxMm": [
+        56.6,
+        39.14,
+        23.45
+      ]
+    },
+    {
+      "index": 97,
+      "id": "MM603_BP51914",
+      "fmaId": "FMA84626",
+      "name": "Left anterior semilunar fibrous scallop of pulmonary valve anulus",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 169161,
+      "vertexCount": 915,
+      "indexOffset": 888015,
+      "indexCount": 5478,
+      "centroidMm": [
+        48.05,
+        33.61,
+        33.47
+      ],
+      "boundsMinMm": [
+        36.99,
+        29.76,
+        22.44
+      ],
+      "boundsMaxMm": [
+        56.12,
+        39.6,
+        39.2
+      ]
+    },
+    {
+      "index": 98,
+      "id": "MM604_BP51948",
+      "fmaId": "FMA7249",
+      "name": "Right anterior cusp of pulmonary valve",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 170076,
+      "vertexCount": 1859,
+      "indexOffset": 893493,
+      "indexCount": 11142,
+      "centroidMm": [
+        37.91,
+        28.54,
+        25.63
+      ],
+      "boundsMinMm": [
+        29.42,
+        21.84,
+        12.86
+      ],
+      "boundsMaxMm": [
+        44.13,
+        38.42,
+        34.49
+      ]
+    },
+    {
+      "index": 99,
+      "id": "MM605_BP51935",
+      "fmaId": "FMA7250",
+      "name": "Posterior cusp of pulmonary valve",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 171935,
+      "vertexCount": 1378,
+      "indexOffset": 904635,
+      "indexCount": 8256,
+      "centroidMm": [
+        46.78,
+        26.46,
+        20.64
+      ],
+      "boundsMinMm": [
+        38.74,
+        20.14,
+        12.91
+      ],
+      "boundsMaxMm": [
+        56.62,
+        35.98,
+        26.15
+      ]
+    },
+    {
+      "index": 100,
+      "id": "MM606_BP51921",
+      "fmaId": "FMA7247",
+      "name": "Left anterior cusp of pulmonary valve",
+      "structureId": 20,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 173313,
+      "vertexCount": 3727,
+      "indexOffset": 912891,
+      "indexCount": 22350,
+      "centroidMm": [
+        47.25,
+        31.1,
+        31.3
+      ],
+      "boundsMinMm": [
+        36.94,
+        25.82,
+        23.34
+      ],
+      "boundsMaxMm": [
+        56.14,
+        38.91,
+        38.78
+      ]
+    },
+    {
+      "index": 101,
+      "id": "MM607_BP58392",
+      "fmaId": "FMA15086",
+      "name": "Pulmonary trunk proper",
+      "structureId": 21,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 177040,
+      "vertexCount": 1867,
+      "indexOffset": 935241,
+      "indexCount": 11202,
+      "centroidMm": [
+        42.01,
+        46.15,
+        16.08
+      ],
+      "boundsMinMm": [
+        27.88,
+        25.72,
+        -1.74
+      ],
+      "boundsMaxMm": [
+        57.36,
+        70.65,
+        39.67
+      ]
+    },
+    {
+      "index": 102,
+      "id": "MM609_BP58397",
+      "fmaId": "FMA77435",
+      "name": "Triangle of sinu-atrial node",
+      "structureId": 10,
+      "category": "conduction_system",
+      "surgicalBaseHex": "#F59E0B",
+      "fresnelRimHex": "#FBBF24",
+      "renderOrder": 2,
+      "vertexOffset": 178907,
+      "vertexCount": 491,
+      "indexOffset": 946443,
+      "indexCount": 1905,
+      "centroidMm": [
+        21.84,
+        -3.26,
+        -2.03
+      ],
+      "boundsMinMm": [
+        19.1,
+        -10.3,
+        -7.97
+      ],
+      "boundsMaxMm": [
+        24.2,
+        4.38,
+        3.14
+      ]
+    },
+    {
+      "index": 103,
+      "id": "MM610_BP51926",
+      "fmaId": "FMA3902",
+      "name": "Left marginal artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 179398,
+      "vertexCount": 2021,
+      "indexOffset": 948348,
+      "indexCount": 11952,
+      "centroidMm": [
+        82.09,
+        -5.85,
+        -7.97
+      ],
+      "boundsMinMm": [
+        54.88,
+        -27.08,
+        -31.13
+      ],
+      "boundsMaxMm": [
+        93.45,
+        14.2,
+        27.77
+      ]
+    },
+    {
+      "index": 104,
+      "id": "MM613_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 181419,
+      "vertexCount": 338,
+      "indexOffset": 960300,
+      "indexCount": 2016,
+      "centroidMm": [
+        41.88,
+        11.38,
+        14.58
+      ],
+      "boundsMinMm": [
+        28.02,
+        -3.58,
+        3.43
+      ],
+      "boundsMaxMm": [
+        55.67,
+        24.65,
+        23.38
+      ]
+    },
+    {
+      "index": 105,
+      "id": "MM614_BP52011",
+      "fmaId": "FMA9560",
+      "name": "Anterior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 181757,
+      "vertexCount": 2000,
+      "indexOffset": 962316,
+      "indexCount": 11988,
+      "centroidMm": [
+        60.28,
+        19.86,
+        -2.0
+      ],
+      "boundsMinMm": [
+        45.36,
+        8.22,
+        -20.99
+      ],
+      "boundsMaxMm": [
+        80.96,
+        28.04,
+        21.01
+      ]
+    },
+    {
+      "index": 106,
+      "id": "MM615_BP51834",
+      "fmaId": "FMA9563",
+      "name": "Lateral wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 183757,
+      "vertexCount": 601,
+      "indexOffset": 974304,
+      "indexCount": 3594,
+      "centroidMm": [
+        62.78,
+        3.19,
+        -22.98
+      ],
+      "boundsMinMm": [
+        46.22,
+        -18.86,
+        -36.04
+      ],
+      "boundsMaxMm": [
+        81.02,
+        19.83,
+        -7.16
+      ]
+    },
+    {
+      "index": 107,
+      "id": "MM616_BP52012",
+      "fmaId": "FMA9561",
+      "name": "Inferior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 184358,
+      "vertexCount": 384,
+      "indexOffset": 977898,
+      "indexCount": 2292,
+      "centroidMm": [
+        48.89,
+        -20.43,
+        -27.06
+      ],
+      "boundsMinMm": [
+        30.31,
+        -36.07,
+        -36.43
+      ],
+      "boundsMaxMm": [
+        69.44,
+        -3.63,
+        -13.35
+      ]
+    },
+    {
+      "index": 108,
+      "id": "MM618_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 184742,
+      "vertexCount": 2794,
+      "indexOffset": 980190,
+      "indexCount": 16752,
+      "centroidMm": [
+        40.99,
+        -19.39,
+        16.64
+      ],
+      "boundsMinMm": [
+        26.85,
+        -37.39,
+        1.81
+      ],
+      "boundsMaxMm": [
+        54.36,
+        -2.32,
+        33.47
+      ]
+    },
+    {
+      "index": 109,
+      "id": "MM619_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 187536,
+      "vertexCount": 495,
+      "indexOffset": 996942,
+      "indexCount": 2958,
+      "centroidMm": [
+        53.01,
+        1.77,
+        26.2
+      ],
+      "boundsMinMm": [
+        35.02,
+        -15.34,
+        14.35
+      ],
+      "boundsMaxMm": [
+        70.02,
+        20.42,
+        38.16
+      ]
+    },
+    {
+      "index": 110,
+      "id": "MM620_BP52011",
+      "fmaId": "FMA9560",
+      "name": "Anterior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 188031,
+      "vertexCount": 829,
+      "indexOffset": 999900,
+      "indexCount": 4962,
+      "centroidMm": [
+        74.7,
+        8.86,
+        14.31
+      ],
+      "boundsMinMm": [
+        56.15,
+        -10.26,
+        -8.27
+      ],
+      "boundsMaxMm": [
+        90.92,
+        23.95,
+        36.05
+      ]
+    },
+    {
+      "index": 111,
+      "id": "MM621_BP51834",
+      "fmaId": "FMA9563",
+      "name": "Lateral wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 188860,
+      "vertexCount": 221,
+      "indexOffset": 1004862,
+      "indexCount": 1314,
+      "centroidMm": [
+        79.72,
+        -10.91,
+        -8.1
+      ],
+      "boundsMinMm": [
+        65.91,
+        -29.78,
+        -26.74
+      ],
+      "boundsMaxMm": [
+        91.09,
+        11.49,
+        10.4
+      ]
+    },
+    {
+      "index": 112,
+      "id": "MM622_BP52012",
+      "fmaId": "FMA9561",
+      "name": "Inferior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 189081,
+      "vertexCount": 684,
+      "indexOffset": 1006176,
+      "indexCount": 4092,
+      "centroidMm": [
+        62.94,
+        -31.93,
+        -12.98
+      ],
+      "boundsMinMm": [
+        42.47,
+        -44.82,
+        -27.68
+      ],
+      "boundsMaxMm": [
+        82.33,
+        -17.62,
+        2.48
+      ]
+    },
+    {
+      "index": 113,
+      "id": "MM623_BP52012",
+      "fmaId": "FMA9561",
+      "name": "Inferior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 189765,
+      "vertexCount": 662,
+      "indexOffset": 1010268,
+      "indexCount": 3960,
+      "centroidMm": [
+        43.07,
+        -34.36,
+        0.55
+      ],
+      "boundsMinMm": [
+        26.54,
+        -44.99,
+        -16.78
+      ],
+      "boundsMaxMm": [
+        60.4,
+        -19.94,
+        15.2
+      ]
+    },
+    {
+      "index": 114,
+      "id": "MM624_BP52011",
+      "fmaId": "FMA9560",
+      "name": "Anterior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 190427,
+      "vertexCount": 3200,
+      "indexOffset": 1014228,
+      "indexCount": 19188,
+      "centroidMm": [
+        72.03,
+        -11.04,
+        36.26
+      ],
+      "boundsMinMm": [
+        61.44,
+        -27.74,
+        10.59
+      ],
+      "boundsMaxMm": [
+        91.79,
+        7.06,
+        45.43
+      ]
+    },
+    {
+      "index": 115,
+      "id": "MM625_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 193627,
+      "vertexCount": 3396,
+      "indexOffset": 1033416,
+      "indexCount": 20364,
+      "centroidMm": [
+        65.2,
+        -16.07,
+        37.32
+      ],
+      "boundsMinMm": [
+        44.46,
+        -35.97,
+        21.72
+      ],
+      "boundsMaxMm": [
+        75.73,
+        0.68,
+        45.45
+      ]
+    },
+    {
+      "index": 116,
+      "id": "MM626_BP52012",
+      "fmaId": "FMA9561",
+      "name": "Inferior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 197023,
+      "vertexCount": 952,
+      "indexOffset": 1053780,
+      "indexCount": 5700,
+      "centroidMm": [
+        61.12,
+        -37.74,
+        17.5
+      ],
+      "boundsMinMm": [
+        42.8,
+        -46.73,
+        -7.49
+      ],
+      "boundsMaxMm": [
+        78.07,
+        -25.12,
+        36.16
+      ]
+    },
+    {
+      "index": 117,
+      "id": "MM627_BP51834",
+      "fmaId": "FMA9563",
+      "name": "Lateral wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 197975,
+      "vertexCount": 1241,
+      "indexOffset": 1059480,
+      "indexCount": 7434,
+      "centroidMm": [
+        81.79,
+        -27.87,
+        10.02
+      ],
+      "boundsMinMm": [
+        68.93,
+        -44.26,
+        -8.56
+      ],
+      "boundsMaxMm": [
+        92.25,
+        -6.48,
+        30.84
+      ]
+    },
+    {
+      "index": 118,
+      "id": "MM628_BP52011",
+      "fmaId": "FMA9560",
+      "name": "Anterior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 199216,
+      "vertexCount": 909,
+      "indexOffset": 1066914,
+      "indexCount": 5442,
+      "centroidMm": [
+        78.14,
+        -31.52,
+        33.47
+      ],
+      "boundsMinMm": [
+        64.01,
+        -45.44,
+        15.81
+      ],
+      "boundsMaxMm": [
+        91.02,
+        -13.66,
+        45.55
+      ]
+    },
+    {
+      "index": 119,
+      "id": "MM629_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 200125,
+      "vertexCount": 1781,
+      "indexOffset": 1072356,
+      "indexCount": 10674,
+      "centroidMm": [
+        28.57,
+        -10.28,
+        3.19
+      ],
+      "boundsMinMm": [
+        20.88,
+        -28.28,
+        -9.35
+      ],
+      "boundsMaxMm": [
+        38.99,
+        4.09,
+        19.66
+      ]
+    },
+    {
+      "index": 120,
+      "id": "MM630_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 201906,
+      "vertexCount": 381,
+      "indexOffset": 1083030,
+      "indexCount": 2274,
+      "centroidMm": [
+        24.18,
+        -4.33,
+        -3.43
+      ],
+      "boundsMinMm": [
+        21.49,
+        -10.39,
+        -8.21
+      ],
+      "boundsMaxMm": [
+        27.58,
+        0.52,
+        1.58
+      ]
+    },
+    {
+      "index": 121,
+      "id": "MM631_BP52012",
+      "fmaId": "FMA9561",
+      "name": "Inferior wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 202287,
+      "vertexCount": 4220,
+      "indexOffset": 1085304,
+      "indexCount": 25308,
+      "centroidMm": [
+        30.12,
+        -23.06,
+        -11.81
+      ],
+      "boundsMinMm": [
+        20.67,
+        -37.04,
+        -25.64
+      ],
+      "boundsMaxMm": [
+        43.74,
+        -8.29,
+        2.54
+      ]
+    },
+    {
+      "index": 122,
+      "id": "MM632_BP51844",
+      "fmaId": "FMA49292",
+      "name": "Anterior wall proper of left atrium",
+      "structureId": 27,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 206507,
+      "vertexCount": 2508,
+      "indexOffset": 1110612,
+      "indexCount": 15036,
+      "centroidMm": [
+        35.31,
+        19.5,
+        -18.13
+      ],
+      "boundsMinMm": [
+        10.94,
+        -4.32,
+        -40.22
+      ],
+      "boundsMaxMm": [
+        57.97,
+        41.01,
+        -3.65
+      ]
+    },
+    {
+      "index": 123,
+      "id": "MM633_BP51882",
+      "fmaId": "FMA9542",
+      "name": "Posterior wall of left atrium",
+      "structureId": 27,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 209015,
+      "vertexCount": 2522,
+      "indexOffset": 1125648,
+      "indexCount": 15120,
+      "centroidMm": [
+        26.51,
+        1.63,
+        -35.84
+      ],
+      "boundsMinMm": [
+        4.73,
+        -19.04,
+        -49.39
+      ],
+      "boundsMaxMm": [
+        52.34,
+        34.12,
+        -10.66
+      ]
+    },
+    {
+      "index": 124,
+      "id": "MM634_BP51951",
+      "fmaId": "FMA4706",
+      "name": "Coronary sinus",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 211537,
+      "vertexCount": 2484,
+      "indexOffset": 1140768,
+      "indexCount": 14766,
+      "centroidMm": [
+        29.43,
+        -15.34,
+        -20.55
+      ],
+      "boundsMinMm": [
+        14.82,
+        -25.0,
+        -40.47
+      ],
+      "boundsMaxMm": [
+        57.33,
+        -5.17,
+        -1.84
+      ]
+    },
+    {
+      "index": 125,
+      "id": "MM635_BP51973",
+      "fmaId": "FMA74923",
+      "name": "Trunk of circumflex branch of left coronary artery",
+      "structureId": 26,
+      "category": "coronary_or_esophagus",
+      "surgicalBaseHex": "#DC2626",
+      "fresnelRimHex": "#F87171",
+      "renderOrder": 3,
+      "vertexOffset": 214021,
+      "vertexCount": 6126,
+      "indexOffset": 1155534,
+      "indexCount": 36744,
+      "centroidMm": [
+        43.92,
+        -10.39,
+        -31.7
+      ],
+      "boundsMinMm": [
+        26.23,
+        -33.06,
+        -37.98
+      ],
+      "boundsMaxMm": [
+        57.86,
+        13.18,
+        -15.01
+      ]
+    },
+    {
+      "index": 126,
+      "id": "MM636_BP51794",
+      "fmaId": "FMA7264",
+      "name": "Anterior papillary muscle of left ventricle",
+      "structureId": 36,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 220147,
+      "vertexCount": 1402,
+      "indexOffset": 1192278,
+      "indexCount": 8358,
+      "centroidMm": [
+        75.98,
+        -5.14,
+        -2.43
+      ],
+      "boundsMinMm": [
+        56.63,
+        -12.23,
+        -12.15
+      ],
+      "boundsMaxMm": [
+        86.04,
+        3.36,
+        8.41
+      ]
+    },
+    {
+      "index": 127,
+      "id": "MM637_BP51868",
+      "fmaId": "FMA9345",
+      "name": "Septal wall of left ventricle",
+      "structureId": 35,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 221549,
+      "vertexCount": 1402,
+      "indexOffset": 1200636,
+      "indexCount": 8358,
+      "centroidMm": [
+        52.37,
+        -30.38,
+        4.41
+      ],
+      "boundsMinMm": [
+        43.27,
+        -39.46,
+        -2.28
+      ],
+      "boundsMaxMm": [
+        61.59,
+        -14.09,
+        10.37
+      ]
+    },
+    {
+      "index": 128,
+      "id": "MM638_BP51995",
+      "fmaId": "FMA4712",
+      "name": "Posterior vein of left ventricle",
+      "structureId": 8,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 3,
+      "vertexOffset": 222951,
+      "vertexCount": 747,
+      "indexOffset": 1208994,
+      "indexCount": 4374,
+      "centroidMm": [
+        65.12,
+        -29.73,
+        -21.28
+      ],
+      "boundsMinMm": [
+        46.69,
+        -44.58,
+        -40.33
+      ],
+      "boundsMaxMm": [
+        80.8,
+        -10.37,
+        3.89
+      ]
+    },
+    {
+      "index": 129,
+      "id": "FJ2420_FMA7242",
+      "fmaId": "FMA7242",
+      "name": "leaflet of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 223698,
+      "vertexCount": 1139,
+      "indexOffset": 1213368,
+      "indexCount": 6966,
+      "centroidMm": [
+        43.22,
+        -2.8,
+        -8.37
+      ],
+      "boundsMinMm": [
+        25.76,
+        -17.54,
+        -26.9
+      ],
+      "boundsMaxMm": [
+        59.86,
+        13.88,
+        21.59
+      ]
+    },
+    {
+      "index": 130,
+      "id": "FJ2426_FMA7254",
+      "fmaId": "FMA7254",
+      "name": "posterior cusp of aortic valve",
+      "structureId": 24,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 224837,
+      "vertexCount": 455,
+      "indexOffset": 1220334,
+      "indexCount": 2718,
+      "centroidMm": [
+        40.44,
+        25.48,
+        -3.73
+      ],
+      "boundsMinMm": [
+        30.6,
+        18.7,
+        -13.59
+      ],
+      "boundsMaxMm": [
+        46.39,
+        33.08,
+        6.66
+      ]
+    },
+    {
+      "index": 131,
+      "id": "FJ2431_FMA7252",
+      "fmaId": "FMA7252",
+      "name": "posterior cusp of aortic valve",
+      "structureId": 22,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 225292,
+      "vertexCount": 159,
+      "indexOffset": 1223052,
+      "indexCount": 942,
+      "centroidMm": [
+        29.0,
+        20.32,
+        -6.33
+      ],
+      "boundsMinMm": [
+        19.67,
+        11.41,
+        -15.17
+      ],
+      "boundsMaxMm": [
+        37.24,
+        28.52,
+        3.85
+      ]
+    },
+    {
+      "index": 132,
+      "id": "FJ2432_FMA7243",
+      "fmaId": "FMA7243",
+      "name": "leaflet of mitral valve",
+      "structureId": 34,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 225451,
+      "vertexCount": 1179,
+      "indexOffset": 1223994,
+      "indexCount": 7206,
+      "centroidMm": [
+        51.31,
+        -9.08,
+        -17.19
+      ],
+      "boundsMinMm": [
+        27.57,
+        -22.4,
+        -34.56
+      ],
+      "boundsMaxMm": [
+        76.85,
+        9.65,
+        3.27
+      ]
+    },
+    {
+      "index": 133,
+      "id": "FJ2435_FMA7253",
+      "fmaId": "FMA7253",
+      "name": "cusp of aortic valve",
+      "structureId": 23,
+      "category": "cardiac_valve",
+      "surgicalBaseHex": "#DCE2EA",
+      "fresnelRimHex": "#FFFFFF",
+      "renderOrder": 2,
+      "vertexOffset": 226630,
+      "vertexCount": 458,
+      "indexOffset": 1231200,
+      "indexCount": 2736,
+      "centroidMm": [
+        32.51,
+        20.44,
+        6.54
+      ],
+      "boundsMinMm": [
+        20.99,
+        12.7,
+        -1.03
+      ],
+      "boundsMaxMm": [
+        40.66,
+        30.73,
+        12.44
+      ]
+    },
+    {
+      "index": 134,
+      "id": "FJ2924_FMA50873",
+      "fmaId": "FMA50873",
+      "name": "pulmonary artery",
+      "structureId": 21,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 227088,
+      "vertexCount": 601,
+      "indexOffset": 1233936,
+      "indexCount": 3594,
+      "centroidMm": [
+        56.12,
+        47.94,
+        -24.9
+      ],
+      "boundsMinMm": [
+        28.76,
+        4.29,
+        -61.91
+      ],
+      "boundsMaxMm": [
+        93.05,
+        72.03,
+        16.56
+      ]
+    },
+    {
+      "index": 135,
+      "id": "FJ2925_FMA49916",
+      "fmaId": "FMA49916",
+      "name": "superior pulmonary vein",
+      "structureId": 30,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 227689,
+      "vertexCount": 209,
+      "indexOffset": 1237530,
+      "indexCount": 1242,
+      "centroidMm": [
+        59.88,
+        38.54,
+        -28.99
+      ],
+      "boundsMinMm": [
+        48.75,
+        29.45,
+        -37.88
+      ],
+      "boundsMaxMm": [
+        69.17,
+        51.22,
+        -20.39
+      ]
+    },
+    {
+      "index": 136,
+      "id": "FJ2933_FMA49916",
+      "fmaId": "FMA49916",
+      "name": "superior pulmonary vein",
+      "structureId": 30,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 227898,
+      "vertexCount": 226,
+      "indexOffset": 1238772,
+      "indexCount": 1344,
+      "centroidMm": [
+        68.13,
+        20.9,
+        -26.36
+      ],
+      "boundsMinMm": [
+        47.7,
+        -3.06,
+        -38.45
+      ],
+      "boundsMaxMm": [
+        95.82,
+        36.09,
+        -9.15
+      ]
+    },
+    {
+      "index": 137,
+      "id": "FJ2944_FMA49913",
+      "fmaId": "FMA49913",
+      "name": "inferior pulmonary vein",
+      "structureId": 31,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 228124,
+      "vertexCount": 157,
+      "indexOffset": 1240116,
+      "indexCount": 930,
+      "centroidMm": [
+        63.55,
+        -4.78,
+        -53.49
+      ],
+      "boundsMinMm": [
+        56.63,
+        -20.46,
+        -66.48
+      ],
+      "boundsMaxMm": [
+        70.02,
+        7.51,
+        -41.98
+      ]
+    },
+    {
+      "index": 138,
+      "id": "FJ2950_FMA49913",
+      "fmaId": "FMA49913",
+      "name": "inferior pulmonary vein",
+      "structureId": 31,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 228281,
+      "vertexCount": 164,
+      "indexOffset": 1241046,
+      "indexCount": 972,
+      "centroidMm": [
+        65.4,
+        -1.79,
+        -42.25
+      ],
+      "boundsMinMm": [
+        51.64,
+        -11.6,
+        -48.16
+      ],
+      "boundsMaxMm": [
+        79.36,
+        7.82,
+        -36.51
+      ]
+    },
+    {
+      "index": 139,
+      "id": "FJ2955_FMA49913",
+      "fmaId": "FMA49913",
+      "name": "inferior pulmonary vein",
+      "structureId": 31,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 228445,
+      "vertexCount": 263,
+      "indexOffset": 1242018,
+      "indexCount": 1566,
+      "centroidMm": [
+        65.46,
+        4.13,
+        -40.31
+      ],
+      "boundsMinMm": [
+        46.85,
+        -7.88,
+        -49.08
+      ],
+      "boundsMaxMm": [
+        86.97,
+        14.36,
+        -28.7
+      ]
+    },
+    {
+      "index": 140,
+      "id": "FJ2966_FMA8612",
+      "fmaId": "FMA8612",
+      "name": "trunk",
+      "structureId": 21,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 228708,
+      "vertexCount": 481,
+      "indexOffset": 1243584,
+      "indexCount": 2874,
+      "centroidMm": [
+        40.99,
+        51.32,
+        15.69
+      ],
+      "boundsMinMm": [
+        25.27,
+        34.5,
+        -3.48
+      ],
+      "boundsMaxMm": [
+        56.08,
+        71.61,
+        38.86
+      ]
+    },
+    {
+      "index": 141,
+      "id": "FJ3019_FMA50872",
+      "fmaId": "FMA50872",
+      "name": "pulmonary artery",
+      "structureId": 21,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 229189,
+      "vertexCount": 336,
+      "indexOffset": 1246458,
+      "indexCount": 2004,
+      "centroidMm": [
+        3.07,
+        43.7,
+        -23.92
+      ],
+      "boundsMinMm": [
+        -44.95,
+        2.4,
+        -57.04
+      ],
+      "boundsMaxMm": [
+        50.94,
+        72.01,
+        11.2
+      ]
+    },
+    {
+      "index": 142,
+      "id": "FJ3020_FMA49914",
+      "fmaId": "FMA49914",
+      "name": "superior pulmonary vein",
+      "structureId": 32,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 229525,
+      "vertexCount": 164,
+      "indexOffset": 1248462,
+      "indexCount": 972,
+      "centroidMm": [
+        -11.42,
+        25.38,
+        -23.41
+      ],
+      "boundsMinMm": [
+        -23.14,
+        12.93,
+        -31.67
+      ],
+      "boundsMaxMm": [
+        -0.02,
+        39.77,
+        -13.46
+      ]
+    },
+    {
+      "index": 143,
+      "id": "FJ3040_FMA49911",
+      "fmaId": "FMA49911",
+      "name": "inferior pulmonary vein",
+      "structureId": 33,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 229689,
+      "vertexCount": 100,
+      "indexOffset": 1249434,
+      "indexCount": 588,
+      "centroidMm": [
+        -6.81,
+        -1.95,
+        -37.78
+      ],
+      "boundsMinMm": [
+        -19.81,
+        -10.72,
+        -43.96
+      ],
+      "boundsMaxMm": [
+        7.72,
+        6.89,
+        -30.98
+      ]
+    },
+    {
+      "index": 144,
+      "id": "FJ3411_FMA3768",
+      "fmaId": "FMA3768",
+      "name": "of aorta",
+      "structureId": 25,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 229789,
+      "vertexCount": 300,
+      "indexOffset": 1250022,
+      "indexCount": 1788,
+      "centroidMm": [
+        29.49,
+        75.63,
+        -22.07
+      ],
+      "boundsMinMm": [
+        7.25,
+        59.9,
+        -70.16
+      ],
+      "boundsMaxMm": [
+        48.84,
+        95.09,
+        17.16
+      ]
+    },
+    {
+      "index": 145,
+      "id": "FJ3413_FMA3736",
+      "fmaId": "FMA3736",
+      "name": "aorta",
+      "structureId": 25,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 10,
+      "vertexOffset": 230089,
+      "vertexCount": 196,
+      "indexOffset": 1251810,
+      "indexCount": 1164,
+      "centroidMm": [
+        25.49,
+        35.67,
+        1.98
+      ],
+      "boundsMinMm": [
+        7.18,
+        12.06,
+        -13.34
+      ],
+      "boundsMaxMm": [
+        42.94,
+        59.9,
+        17.44
+      ]
+    },
+    {
+      "index": 146,
+      "id": "FJ3427_FMA3784",
+      "fmaId": "FMA3784",
+      "name": "aorta",
+      "structureId": 37,
+      "category": "left_heart_chamber",
+      "surgicalBaseHex": "#9E4747",
+      "fresnelRimHex": "#C96A6A",
+      "renderOrder": 3,
+      "vertexOffset": 230285,
+      "vertexCount": 503,
+      "indexOffset": 1252974,
+      "indexCount": 3006,
+      "centroidMm": [
+        28.23,
+        -82.49,
+        -32.4
+      ],
+      "boundsMinMm": [
+        11.59,
+        -275.22,
+        -74.89
+      ],
+      "boundsMaxMm": [
+        48.7,
+        59.9,
+        11.21
+      ]
+    },
+    {
+      "index": 147,
+      "id": "FJ3441_FMA10951",
+      "fmaId": "FMA10951",
+      "name": "vena cava",
+      "structureId": 5,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 230788,
+      "vertexCount": 164,
+      "indexOffset": 1255980,
+      "indexCount": 972,
+      "centroidMm": [
+        -1.28,
+        -77.61,
+        -5.02
+      ],
+      "boundsMinMm": [
+        -12.7,
+        -127.04,
+        -16.45
+      ],
+      "boundsMaxMm": [
+        9.98,
+        -31.5,
+        6.5
+      ]
+    },
+    {
+      "index": 148,
+      "id": "FJ3645_FMA4720",
+      "fmaId": "FMA4720",
+      "name": "vena cava",
+      "structureId": 4,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 230952,
+      "vertexCount": 279,
+      "indexOffset": 1256952,
+      "indexCount": 1662,
+      "centroidMm": [
+        -1.1,
+        69.26,
+        -4.68
+      ],
+      "boundsMinMm": [
+        -12.63,
+        52.81,
+        -16.41
+      ],
+      "boundsMaxMm": [
+        9.89,
+        87.8,
+        7.28
+      ]
+    },
+    {
+      "index": 149,
+      "id": "FJ3659_FMA10951",
+      "fmaId": "FMA10951",
+      "name": "vena cava",
+      "structureId": 5,
+      "category": "right_heart_chamber",
+      "surgicalBaseHex": "#3B6E8C",
+      "fresnelRimHex": "#6497B1",
+      "renderOrder": 10,
+      "vertexOffset": 231231,
+      "vertexCount": 213,
+      "indexOffset": 1258614,
+      "indexCount": 1266,
+      "centroidMm": [
+        3.14,
+        -216.34,
+        -3.33
+      ],
+      "boundsMinMm": [
+        -9.8,
+        -271.0,
+        -14.27
+      ],
+      "boundsMaxMm": [
+        11.85,
+        -126.99,
+        8.62
+      ]
+    },
+    {
+      "index": 150,
+      "id": "FMA7260_Anterior",
+      "fmaId": "FMA7260",
+      "name": "muscle RV",
+      "structureId": 18,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 231444,
+      "vertexCount": 1932,
+      "indexOffset": 1259880,
+      "indexCount": 11580,
+      "centroidMm": [
+        42.12,
+        -15.26,
+        41.56
+      ],
+      "boundsMinMm": [
+        26.01,
+        -32.12,
+        31.13
+      ],
+      "boundsMaxMm": [
+        61.29,
+        -2.77,
+        52.71
+      ]
+    },
+    {
+      "index": 151,
+      "id": "FMA7261_Posterior",
+      "fmaId": "FMA7261",
+      "name": "muscle RV",
+      "structureId": 18,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 233376,
+      "vertexCount": 1367,
+      "indexOffset": 1271460,
+      "indexCount": 8190,
+      "centroidMm": [
+        34.33,
+        -26.14,
+        24.29
+      ],
+      "boundsMinMm": [
+        21.13,
+        -33.49,
+        11.82
+      ],
+      "boundsMaxMm": [
+        50.78,
+        -18.95,
+        40.52
+      ]
+    },
+    {
+      "index": 152,
+      "id": "FMA7262_Septal",
+      "fmaId": "FMA7262",
+      "name": "muscle RV",
+      "structureId": 18,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 234743,
+      "vertexCount": 951,
+      "indexOffset": 1279650,
+      "indexCount": 5694,
+      "centroidMm": [
+        36.39,
+        14.55,
+        16.05
+      ],
+      "boundsMinMm": [
+        26.87,
+        1.48,
+        8.2
+      ],
+      "boundsMaxMm": [
+        46.36,
+        28.49,
+        23.66
+      ]
+    },
+    {
+      "index": 153,
+      "id": "FMA7266_Posterior",
+      "fmaId": "FMA7266",
+      "name": "muscle LV",
+      "structureId": 36,
+      "category": "intracardiac_landmark",
+      "surgicalBaseHex": "#C26D5E",
+      "fresnelRimHex": "#D48472",
+      "renderOrder": 2,
+      "vertexOffset": 235694,
+      "vertexCount": 1953,
+      "indexOffset": 1285344,
+      "indexCount": 11706,
+      "centroidMm": [
+        77.14,
+        -9.45,
+        5.94
+      ],
+      "boundsMinMm": [
+        60.43,
+        -23.57,
+        -15.35
+      ],
+      "boundsMaxMm": [
+        88.96,
+        6.51,
+        27.01
+      ]
+    }
+  ],
+  "acousticVolume": {
+    "dimensions": [
+      128,
+      128,
+      128
+    ],
+    "boundsMinMm": [
+      -90.0,
+      -90.0,
+      -90.0
+    ],
+    "boundsMaxMm": [
+      90.0,
+      90.0,
+      90.0
+    ],
+    "channels": [
+      "impedanceZ",
+      "backscatter",
+      "structureId",
+      "borderGradient"
+    ]
+  }
+}

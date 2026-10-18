@@ -1,0 +1,1757 @@
+/* ============================================================================
+ * ICE Zero-Fluoroscopy Ablation & LAA Watchman Implantation Simulator
+ * Clinical Workstation Stylesheet (SPEC PATCH #9 - #12 Compliant)
+ *
+ * Palette:
+ *   --bg-workstation: #070B12 (Deep Obsidian Slate)
+ *   --bg-panel:       #0D1420 (Elevated Clinical Instrument Panel)
+ *   --bg-panel-alt:   #111A29 (Interactive Control Surface)
+ *   --bg-echo:        #030508 (Sacred Pitch-Black Ultrasound Stage)
+ *   --accent-cyan:    #38BDF8 (CARTO 3 / Distal Orientation Cyan)
+ *   --accent-amber:   #F59E0B (Acoustic Lens / Proximal Orientation Gold)
+ *   --accent-emerald: #10B981 (Lead II ECG / PASS Verified Emerald)
+ *   --accent-crimson: #EF4444 (Arterial / Danger / Leak Alert)
+ * ============================================================================ */
+
+:root {
+  --bg-workstation: #070B12;
+  --bg-panel: #0D1420;
+  --bg-panel-alt: #111A29;
+  --bg-panel-hover: #172336;
+  --bg-echo: #030508;
+  --border-subtle: #1E293B;
+  --border-focus: #334155;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --accent-cyan: #38BDF8;
+  --accent-cyan-dim: rgba(56, 189, 248, 0.14);
+  --accent-amber: #F59E0B;
+  --accent-amber-dim: rgba(245, 158, 11, 0.14);
+  --accent-emerald: #10B981;
+  --accent-emerald-dim: rgba(16, 185, 129, 0.14);
+  --accent-crimson: #EF4444;
+  --accent-crimson-dim: rgba(239, 68, 68, 0.15);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-workstation);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+.tabular-nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+ * 4-ZONE NON-SCROLLING CLINICAL WORKSTATION GRID (100vw x 100vh)
+ * ============================================================================ */
+
+.ice-workstation-grid {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  grid-template-rows: 44px minmax(0, 1fr) 132px;
+  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-areas:
+    "header header"
+    "drawer viewports"
+    "deck   deck";
+  background-color: var(--bg-workstation);
+}
+
+.ice-workstation-grid.drawer-collapsed {
+  grid-template-columns: 32px minmax(0, 1fr);
+}
+
+/* ============================================================================
+ * ZONE 1: TOP CLINICAL HEADER (44px)
+ * ============================================================================ */
+
+.zone-top-header {
+  grid-area: header;
+  height: 44px;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  gap: 8px;
+  z-index: 30;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.header-brand-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: -0.03em;
+}
+
+.header-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-brand-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.header-brand-subtitle {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.header-control-groups {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.segmented-group {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.segmented-group-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.seg-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.seg-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-panel-alt);
+}
+
+.seg-btn.active {
+  background-color: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border-color: rgba(56, 189, 248, 0.45);
+  font-weight: 600;
+}
+
+.seg-btn.active-amber {
+  background-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+  border-color: rgba(245, 158, 11, 0.45);
+  font-weight: 600;
+}
+
+.seg-btn.active-emerald {
+  background-color: var(--accent-emerald-dim);
+  color: var(--accent-emerald);
+  border-color: rgba(16, 185, 129, 0.45);
+  font-weight: 600;
+}
+
+.seg-count-badge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background-color: rgba(148, 163, 184, 0.14);
+  color: inherit;
+}
+
+.header-action-btn {
+  appearance: none;
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-focus);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.header-action-btn:hover {
+  background-color: var(--bg-panel-hover);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* ============================================================================
+ * ZONE 2: LEFT CURRICULUM & MANEUVER DRAWER (300px)
+ * ============================================================================ */
+
+.zone-left-drawer {
+  grid-area: drawer;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 20;
+}
+
+.drawer-collapsed .zone-left-drawer .drawer-inner-content {
+  display: none;
+}
+
+.drawer-header-bar {
+  height: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-workstation);
+}
+
+.drawer-header-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-collapse-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-collapse-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-cyan);
+}
+
+.drawer-inner-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* View Selector Strip (Top part of Drawer) */
+.drawer-view-list-container {
+  height: 168px;
+  min-height: 140px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-view-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.view-list-item {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-secondary);
+  transition: background-color 100ms ease, color 100ms ease;
+}
+
+.view-list-item:hover {
+  background-color: var(--bg-panel-alt);
+  color: var(--text-primary);
+}
+
+.view-list-item.active {
+  background-color: var(--accent-cyan-dim);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--text-primary);
+}
+
+.view-list-item-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.view-num-pill {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background-color: var(--bg-workstation);
+  color: var(--accent-cyan);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.view-list-item.active .view-num-pill {
+  background-color: var(--accent-cyan);
+  color: #030508;
+  border-color: var(--accent-cyan);
+}
+
+.view-short-title {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.view-station-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background-color: rgba(148, 163, 184, 0.12);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Active View Detail Scroll Area (Bottom part of Drawer) */
+.drawer-active-view-detail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.active-view-header-card {
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-view-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.meta-badge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.meta-badge.cyan {
+  color: var(--accent-cyan);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.meta-badge.amber {
+  color: var(--accent-amber);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.active-view-full-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.active-view-dof-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  background-color: var(--bg-workstation);
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+.dof-mini-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.dof-mini-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.dof-mini-val {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Primary Play Animated Maneuver Demo Button & Choreography Bar */
+.btn-play-maneuver-demo {
+  appearance: none;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--accent-cyan);
+  background-color: rgba(56, 189, 248, 0.16);
+  color: var(--accent-cyan);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.btn-play-maneuver-demo:hover {
+  background-color: var(--accent-cyan);
+  color: #030508;
+}
+
+.btn-play-maneuver-demo.playing {
+  background-color: var(--accent-amber-dim);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.demo-choreography-box {
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.demo-choreography-box.visible {
+  display: flex;
+}
+
+.demo-phase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--accent-amber);
+}
+
+.demo-progress-track {
+  width: 100%;
+  height: 4px;
+  background-color: var(--bg-panel-alt);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.demo-progress-fill {
+  height: 100%;
+  background-color: var(--accent-amber);
+  width: 0%;
+  transition: width 60ms linear;
+}
+
+.demo-phase-caption {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* Curriculum Sections inside Drawer */
+.curriculum-section {
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.curriculum-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 3px;
+}
+
+.maneuver-bullet-list,
+.pearls-bullet-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.maneuver-bullet-item,
+.pearl-bullet-item {
+  font-size: 11px;
+  color: var(--text-primary);
+  line-height: 1.38;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.bullet-step-index {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  padding: 0 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pearl-bullet-item .bullet-step-index {
+  color: var(--accent-amber);
+}
+
+.clock-anatomy-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.clock-anatomy-row {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 6px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  padding: 3px 0;
+  border-bottom: 1px dashed rgba(51, 65, 85, 0.45);
+}
+
+.clock-anatomy-row:last-child {
+  border-bottom: none;
+}
+
+.clock-zone-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--accent-amber);
+}
+
+.clock-zone-label.cyan {
+  color: var(--accent-cyan);
+}
+
+.clock-zone-desc {
+  color: var(--text-secondary);
+}
+
+.expected-landmarks-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.landmark-chip {
+  appearance: none;
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.landmark-chip:hover,
+.landmark-chip.hit {
+  border-color: var(--accent-emerald);
+  color: var(--text-primary);
+  background-color: var(--accent-emerald-dim);
+}
+
+.landmark-color-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.citation-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.citation-pill-btn {
+  appearance: none;
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.citation-pill-btn:hover {
+  background-color: var(--accent-cyan-dim);
+  border-color: var(--accent-cyan);
+}
+
+/* ============================================================================
+ * ZONE 3: DUAL CLINICAL VIEWPORTS (3D HEART + LIVE ULTRASOUND CONSOLE)
+ * ============================================================================ */
+
+.zone-dual-viewports {
+  grid-area: viewports;
+  display: grid;
+  grid-template-columns: 48% 52%;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--bg-workstation);
+}
+
+/* Left Viewport: 3D Heart + CARTOSOUND Stage */
+.viewport-3d-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid var(--border-subtle);
+  background: radial-gradient(circle at 50% 48%, #0C1526 0%, #05080F 100%);
+}
+
+.viewport-canvas-mount {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.viewport-canvas-mount canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Top Floating Controls on 3D Stage */
+.stage-3d-top-bar {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.floating-pill-group {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  background-color: rgba(13, 20, 32, 0.88);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 3px;
+  backdrop-filter: blur(6px);
+}
+
+.floating-pill-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 3px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.floating-pill-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-panel-alt);
+}
+
+.floating-pill-btn.active {
+  background-color: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.floating-select {
+  pointer-events: auto;
+  background-color: rgba(13, 20, 32, 0.92);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Layers & Pathology Popover on 3D Stage */
+.layers-pathology-popover {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  width: 256px;
+  background-color: rgba(13, 20, 32, 0.96);
+  border: 1px solid var(--border-focus);
+  border-radius: 6px;
+  padding: 9px;
+  z-index: 25;
+  display: none;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+}
+
+.layers-pathology-popover.open {
+  display: flex;
+}
+
+.popover-section-heading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 3px;
+}
+
+.layer-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.layer-toggle-row input[type="checkbox"] {
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+}
+
+/* Bottom Overlay on 3D Stage */
+.stage-3d-bottom-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.stage-3d-callout-strip {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  background-color: rgba(13, 20, 32, 0.86);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 7px;
+  max-width: 72%;
+}
+
+.stage-3d-hover-readout {
+  pointer-events: auto;
+  background-color: rgba(13, 20, 32, 0.92);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* Right Viewport: Live Ultrasound Sector Console (#030508 Pitch-Black Stage) */
+.viewport-ultrasound-console {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-echo);
+  display: flex;
+  flex-direction: column;
+}
+
+.ultrasound-sacred-stage {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  background-color: var(--bg-echo);
+  overflow: hidden;
+}
+
+/* Bottom Console Softkey Toolbar on Ultrasound Panel */
+.ultrasound-console-toolbar {
+  height: 32px;
+  min-height: 32px;
+  background-color: #080D16;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+  gap: 3px;
+  z-index: 16;
+  overflow: hidden;
+}
+
+.echo-softkey-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.echo-softkey-btn {
+  appearance: none;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 9.5px;
+  padding: 2px 4.5px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease;
+}
+
+.echo-softkey-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+  background-color: var(--bg-panel-alt);
+}
+
+.echo-softkey-btn.active {
+  background-color: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.echo-softkey-btn.active-amber {
+  background-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+}
+
+.echo-softkey-btn.active-crimson {
+  background-color: var(--accent-crimson-dim);
+  color: var(--accent-crimson);
+  border-color: var(--accent-crimson);
+}
+
+/* TGC 6-Band Curve Popover */
+.tgc-curve-popover {
+  position: absolute;
+  bottom: 38px;
+  right: 10px;
+  width: 240px;
+  background-color: rgba(13, 20, 32, 0.96);
+  border: 1px solid var(--border-focus);
+  border-radius: 6px;
+  padding: 9px;
+  z-index: 25;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+}
+
+.tgc-curve-popover.open {
+  display: flex;
+}
+
+.tgc-band-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 38px;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.tgc-band-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-cyan);
+  height: 4px;
+  cursor: pointer;
+}
+
+/* ============================================================================
+ * ZONE 4: BOTTOM TACTILE CATHETER HANDLE & CONTEXTUAL PROCEDURAL DECK (132px)
+ * ============================================================================ */
+
+.zone-bottom-deck {
+  grid-area: deck;
+  height: 132px;
+  background-color: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr) 354px;
+  gap: 6px;
+  padding: 4px 8px;
+  align-items: stretch;
+  z-index: 30;
+  overflow: hidden;
+}
+
+/* Column 1: Station Pills + Interactive Catheter Handle Silhouette */
+.deck-col-station-handle {
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3px;
+}
+
+.station-pills-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.station-pill-btn {
+  appearance: none;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 2.5px 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.station-pill-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.station-pill-btn.active {
+  background-color: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.handle-silhouette-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.handle-svg-box {
+  flex: 1;
+  height: 40px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.btn-reset-home {
+  appearance: none;
+  width: 100%;
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-focus);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn-reset-home:hover {
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+/* Column 2: 5-DOF Tactile Rotary Thumb-Wheels & Sliders */
+.deck-col-dof-wheels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.dof-wheel-card {
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.dof-wheel-card.disabled {
+  opacity: 0.48;
+}
+
+.dof-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+}
+
+.dof-card-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dof-card-readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  white-space: nowrap;
+}
+
+.dof-card-readout.amber {
+  color: var(--accent-amber);
+}
+
+.dof-wheel-body {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 1px 0;
+}
+
+.rotary-dial-svg {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  cursor: ns-resize;
+}
+
+.dof-slider-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dof-range-input {
+  width: 100%;
+  accent-color: var(--accent-cyan);
+  height: 4px;
+  cursor: pointer;
+}
+
+.dof-range-input.amber {
+  accent-color: var(--accent-amber);
+}
+
+.dof-sub-hint {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  white-space: nowrap;
+}
+
+.omni-preset-pills {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+
+.omni-preset-btn {
+  appearance: none;
+  flex: 1;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 8.5px;
+  padding: 1.5px 0;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.omni-preset-btn:hover,
+.omni-preset-btn.active {
+  background-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+}
+
+/* Column 3: Contextual Procedural Deck (Watchman LAAC / Practice Challenge / Quick Sweep) */
+.deck-col-contextual {
+  background-color: var(--bg-workstation);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.contextual-deck-pane {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  gap: 2px;
+}
+
+.contextual-deck-pane.active {
+  display: flex;
+}
+
+.context-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 2px;
+}
+
+.context-pane-title {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--accent-amber);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.context-pane-title.cyan {
+  color: var(--accent-cyan);
+}
+
+.context-pane-title.emerald {
+  color: var(--accent-emerald);
+}
+
+/* Watchman Contextual Deck Controls */
+.watchman-row-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.watchman-mini-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wm-size-btn,
+.wm-stage-btn {
+  appearance: none;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  padding: 1.5px 3.5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.wm-size-btn.active,
+.wm-stage-btn.active {
+  background-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  font-weight: 600;
+}
+
+.wm-tug-btn {
+  appearance: none;
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wm-tug-btn:hover,
+.wm-tug-btn.active {
+  background-color: var(--accent-cyan);
+  color: #030508;
+}
+
+.pass-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.pass-criterion-badge {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  padding: 1.5px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  color: var(--text-secondary);
+}
+
+.pass-criterion-badge.passed {
+  background-color: var(--accent-emerald-dim);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--accent-emerald);
+}
+
+.pass-criterion-badge.failed {
+  background-color: var(--accent-crimson-dim);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: var(--accent-crimson);
+}
+
+/* Fellow Practice Challenge HUD */
+.challenge-match-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.challenge-bar-track {
+  flex: 1;
+  height: 7px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.challenge-bar-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent-cyan);
+  transition: width 80ms linear, background-color 150ms ease;
+}
+
+.challenge-bar-fill.passed {
+  background-color: var(--accent-emerald);
+}
+
+.challenge-deltas-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+}
+
+.challenge-delta-pill {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  padding: 1.5px 2px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 8.5px;
+  color: var(--text-secondary);
+}
+
+.challenge-delta-pill.ok {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: var(--accent-emerald);
+}
+
+.challenge-coaching-text {
+  font-size: 9.5px;
+  color: var(--text-primary);
+  background-color: var(--bg-panel);
+  border-left: 2px solid var(--accent-amber);
+  padding: 2px 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Zero-Fluoro Quick-Jump Clockwise Sweep Grid */
+.quick-sweep-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.quick-sweep-btn {
+  appearance: none;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  padding: 2px 3px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-sweep-btn:hover,
+.quick-sweep-btn.active {
+  background-color: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+/* ============================================================================
+ * LITERATURE & SIZING MATRIX MODAL OVERLAY
+ * ============================================================================ */
+
+.literature-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(3, 5, 8, 0.82);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.literature-modal-backdrop.open {
+  display: flex;
+}
+
+.literature-modal-dialog {
+  width: min(1040px, 94vw);
+  height: min(760px, 88vh);
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-focus);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+}
+
+.literature-modal-header {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  background-color: var(--bg-workstation);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.literature-modal-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.literature-modal-close {
+  appearance: none;
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.literature-modal-close:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-crimson);
+}
+
+.literature-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sizing-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.sizing-matrix-table th,
+.sizing-matrix-table td {
+  border: 1px solid var(--border-subtle);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.sizing-matrix-table th {
+  background-color: var(--bg-workstation);
+  color: var(--accent-amber);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.sizing-matrix-table td {
+  background-color: var(--bg-panel-alt);
+  color: var(--text-primary);
+}
+
+.manuscript-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.manuscript-card {
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manuscript-card.highlighted {
+  border-color: var(--accent-cyan);
+  background-color: rgba(56, 189, 248, 0.07);
+}
+
+.manuscript-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.manuscript-card-citation {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-cyan);
+}
+
+/* Custom Ultra-Thin Dark Slate Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-workstation);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-focus);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Responsive Tuning for Standard Desktop (<= 1560px) and Tablet / Laptop (<= 1240px) */
+@media (max-width: 1560px) {
+  .header-brand-subtitle,
+  .segmented-group-label,
+  .echo-softkey-label {
+    display: none;
+  }
+  .seg-btn {
+    padding: 4px 7px;
+    font-size: 10.5px;
+  }
+  .header-action-btn {
+    padding: 4px 8px;
+    font-size: 10.5px;
+  }
+  .echo-softkey-btn {
+    font-size: 9px;
+    padding: 2px 3.5px;
+  }
+}
+
+@media (max-width: 1240px) {
+  .ice-workstation-grid {
+    grid-template-columns: 236px minmax(0, 1fr);
+  }
+  .zone-top-header {
+    padding: 0 6px;
+    gap: 4px;
+  }
+  .header-brand-title {
+    font-size: 10px;
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-control-groups {
+    gap: 4px;
+  }
+  .seg-btn {
+    padding: 2px 4px;
+    font-size: 9.5px;
+    gap: 2px;
+  }
+  .header-action-btn {
+    padding: 2px 5px;
+    font-size: 9.5px;
+    flex-shrink: 0;
+  }
+  .ultrasound-console-toolbar {
+    padding: 0 2px;
+    gap: 1px;
+  }
+  .echo-softkey-group {
+    gap: 1px;
+  }
+  .echo-softkey-btn {
+    font-size: 7.5px;
+    padding: 1.5px 1.5px;
+  }
+  .zone-bottom-deck {
+    grid-template-columns: 168px minmax(0, 1fr) 284px;
+    gap: 5px;
+    padding: 4px 6px;
+  }
+  .deck-col-contextual {
+    padding: 3px 6px;
+  }
+  .contextual-deck-pane {
+    gap: 1px;
+  }
+  .quick-sweep-btn {
+    font-size: 8.5px;
+    padding: 1.5px 2px;
+  }
+  .station-pill-btn {
+    font-size: 8.5px;
+    padding: 2px 1px;
+  }
+  .btn-reset-home {
+    font-size: 8.5px;
+    padding: 2.5px 3px;
+  }
+  .deck-col-dof-wheels {
+    gap: 4px;
+  }
+  .dof-wheel-card {
+    padding: 4px 4px;
+  }
+  .dof-card-title {
+    font-size: 9px;
+  }
+  .dof-card-readout {
+    font-size: 9.5px;
+  }
+  .dof-wheel-body {
+    gap: 4px;
+  }
+  .rotary-dial-svg {
+    width: 30px;
+    height: 30px;
+  }
+  .dof-sub-hint {
+    font-size: 7.5px;
+  }
+  .omni-preset-btn {
+    font-size: 8px;
+    padding: 1px 0;
+  }
+  .manuscript-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
