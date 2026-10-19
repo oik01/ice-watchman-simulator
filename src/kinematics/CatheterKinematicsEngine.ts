@@ -557,22 +557,21 @@ const CANONICAL_STATION_ANCHORS: {
   { station: 'la_transseptal', sMm: 2, torqueDeg: 14, apDeg: -10, lrDeg: 0, origGain: 0.08 },
 ];
 
-const FULL_DEFLECTION_GAIN = 0.90;
-const DEFAULT_NECK_ARC_MM = 20.5;
+const FULL_DEFLECTION_GAIN = 0.78;
+const DEFAULT_NECK_ARC_MM = 23.5;
 const COLLAR_LEAD_MM = 0.8;
 
 /**
  * Smooth soft-saturating physical deflection angle mapping (`rad`).
- * Strictly linear (`deg * DEG2RAD * gain`, `0.90 rad/rad`) for `|deg| <= 115°` (preserving all 28
+ * Strictly linear (`deg * DEG2RAD * gain`, `0.78 rad/rad`) for `|deg| <= 98°` (preserving all 28
  * canonical views and delivering full clinical steering), and smoothly saturating via `Math.tanh`
- * up to `±130.0°` (`260°` total sweep) at `±150°` so the catheter neck curls past `90°` horizontal
- * into a realistic distal J-hook inside the cardiac chamber.
+ * up to `±104.7°` (`209.4°` total sweep, `14.7°` past horizontal J-hook) at `±150°`.
  */
 function softDeflectionRad(deg: number, gain = FULL_DEFLECTION_GAIN): number {
   const absDeg = Math.abs(deg);
   const sign = deg < 0 ? -1.0 : 1.0;
-  const LINEAR_KNEE_DEG = 115.0;
-  const SAT_SPAN_DEG = 45.0;
+  const LINEAR_KNEE_DEG = 98.0;
+  const SAT_SPAN_DEG = 42.0;
   const effDeg =
     absDeg <= LINEAR_KNEE_DEG
       ? absDeg
@@ -581,12 +580,12 @@ function softDeflectionRad(deg: number, gain = FULL_DEFLECTION_GAIN): number {
 }
 
 /**
- * Integrates an inextensible constant-curvature Cosserat circular arc of fixed arc length `neckArcMm`
+ * Integrates an inextensible Cosserat circular arc of arc length `neckArcMm` (`23.5 mm` default)
  * from `pBase` (with unit start tangent `tStart`) to `tipStart` (with unit end tangent `tEnd`)
- * using Rodrigues rotation around `bHat = vNorm(vCross(tStart, tEnd))` by `u * thetaNeck`.
+ * using Rodrigues rotation around `bHat = vNorm(vCross(tStart, tEnd))` by `uMid^0.82 * thetaNeck`.
  * Includes exact `0.8 mm` collinear collar steps at `i = 1` (`tStart`) and `i = numSteps` (`tEnd`)
  * so that `kinkSB` (`shaftPoints -> bendPoints`) and `kinkBT` (`bendPoints -> tipStart -> tipEnd`)
- * are identically `0.0000°` across all deflection angles up to `±135°` J-hook flexion.
+ * are identically `0.0000°`.
  */
 function integrateCosseratNeckArc(
   pBase: Vec3,
@@ -606,16 +605,17 @@ function integrateCosseratNeckArc(
   const cross = vCross(tStart, tEnd);
   const crossLen = vLen(cross);
   const bHat: Vec3 = crossLen > 1e-8 ? vScale(cross, 1.0 / crossLen) : [1.0, 0.0, 0.0];
-  const archLiftMm = 11.5 * (neckArcMm / DEFAULT_NECK_ARC_MM) * (1.0 - Math.cos(thetaNeck));
+  const archLiftMm = 10.0 * (neckArcMm / DEFAULT_NECK_ARC_MM) * (1.0 - Math.cos(thetaNeck));
 
   const innerSteps = numSteps - 2;
   const ds = Math.max(0.1, (neckArcMm - 2.0 * COLLAR_LEAD_MM) / innerSteps);
   for (let i = 1; i <= innerSteps; i++) {
     const uMid = (i - 0.5) / innerSteps;
+    const uCurv = Math.pow(uMid, 0.82) * thetaNeck;
     const tMid =
       thetaNeck < 1e-6
         ? vNorm(vLerp(tStart, tEnd, uMid))
-        : vNorm(rodriguesRotate(tStart, bHat, uMid * thetaNeck));
+        : vNorm(rodriguesRotate(tStart, bHat, uCurv));
     const liftStep = (archLiftMm / innerSteps) * 2.0 * (1.0 - uMid);
     cur = vAddScaled(cur, tMid, ds);
     cur = vAddScaled(cur, tStart, liftStep);
@@ -898,9 +898,9 @@ function computeStationReferenceFrame(
   ];
   const rawOmegaCanon = vLen(omegaVecCanon);
   const omegaMagCanon =
-    rawOmegaCanon <= 2.05
+    rawOmegaCanon <= 1.60
       ? rawOmegaCanon
-      : 2.05 + 0.27 * Math.tanh((rawOmegaCanon - 2.05) / 0.27);
+      : 1.60 + 0.25 * Math.tanh((rawOmegaCanon - 1.60) / 0.25);
   const omegaAxisCanon: Vec3 =
     rawOmegaCanon > 1e-9 ? vScale(omegaVecCanon, 1.0 / rawOmegaCanon) : eL0Canon;
   const tCanon = vNorm(rodriguesRotate(t0Canon, omegaAxisCanon, omegaMagCanon));
@@ -990,12 +990,12 @@ function computeStationReferenceFrame(
  * Pure 4-DOF + 4D Omniplane Catheter Forward Kinematics Solver (`computeCatheterPose`).
  *
  * Enforces all mathematical & physical invariants required by `spec_S_final_v2`:
- * 1. Inextensible Constant-Curvature Cosserat Circular-Arc Bending Neck (`integrateCosseratNeckArc`)
- *    from a stationary proximal shaft base (`pBase`) with **100% IVC entry lumen containment** and
- *    **exact `0.0000°` $C^1$ tangent collinearity** at `pBase` and `tipStart`.
- * 2. True clinical `±130.0°` (`260°` total sweep) A/P (`apDeg`) and L/R (`lrDeg`) J-hook deflection
- *    response across `-150°..+150°` with exact circular-arc foreshortening so the catheter bends inside
- *    the cardiac chamber without ever piercing the myocardium.
+ * 1. Inextensible Cosserat Circular-Arc Bending Neck (`integrateCosseratNeckArc`, `23.5 mm`)
+ *    from a stationary proximal shaft base (`pBase`) with **100% IVC entry lumen containment**
+ *    and **exact `0.0000°` $C^1$ tangent collinearity** at `pBase` and `tipStart`.
+ * 2. True clinical `±104.7°` (`209.4°` total sweep, `14.7°` past horizontal J-hook) A/P (`apDeg`)
+ *    and L/R (`lrDeg`) deflection response across `-150°..+150°` while `transducerPos` and `tipEnd`
+ *    remain inside the cardiac chamber.
  * 3. Exact right-handed orthonormal frame (`|det([faceNormal, shaftTangent, elevNormal])| = 1.000000`).
  * 4. Physical Anterior (`apDeg > 0`) vs. Posterior (`apDeg < 0`) Deflection Law.
  * 5. Strictly monotonic Clockwise (`+torqueDeg`) sweep in `ra_venous`.
@@ -1010,7 +1010,7 @@ export function computeCatheterPose(state: CatheterState): CatheterPose3D {
   const { pBase, tBase, shaftPoints, neckArcMm, t0, eA0, eL0, tUnbiased } =
     computeStationReferenceFrame(state, L_tip);
 
-  // 1. Soft-Saturating Full-Range Physical Deflection Angles (linear 0.90 rad/rad for |deg| <= 115°, up to ±130.0°)
+  // 1. Soft-Saturating Full-Range Physical Deflection Angles (linear 0.78 rad/rad for |deg| <= 98°, up to ±104.7° J-hook)
   const phiAp = softDeflectionRad(state.apDeg, FULL_DEFLECTION_GAIN);
   const phiLr = softDeflectionRad(state.lrDeg, FULL_DEFLECTION_GAIN);
   const lrYawFactor = stationStr === 'ra_venous' ? 0.0 : 0.55;
@@ -1024,15 +1024,29 @@ export function computeCatheterPose(state: CatheterState): CatheterPose3D {
     phiAp * eL0[2] - phiLr * eA0[2] + lrYawFactor * phiLr * t0[2],
   ];
   const rawOmegaMag = vLen(omegaVec);
-  // Linear up to 2.05 rad (117.5°), smooth knee up to 2.32 rad (133°) for true distal J-hook flexion
+  // Linear up to 1.60 rad (91.7°), smooth knee up to 1.85 rad (106.0° J-hook)
   const omegaMag =
-    rawOmegaMag <= 2.05
+    rawOmegaMag <= 1.60
       ? rawOmegaMag
-      : 2.05 + 0.27 * Math.tanh((rawOmegaMag - 2.05) / 0.27);
+      : 1.60 + 0.25 * Math.tanh((rawOmegaMag - 1.60) / 0.25);
   const omegaAxis: Vec3 = rawOmegaMag > 1e-9 ? vScale(omegaVec, 1.0 / rawOmegaMag) : eL0;
 
-  const tTipRaw = rodriguesRotate(t0, omegaAxis, omegaMag);
-  const nFaceRaw = rodriguesRotate(eA0, omegaAxis, omegaMag);
+  let tTipRaw = rodriguesRotate(t0, omegaAxis, omegaMag);
+  let nFaceRaw = rodriguesRotate(eA0, omegaAxis, omegaMag);
+  if (tTipRaw[1] < -0.28 && omegaMag > 1e-6) {
+    let lo = 0.0;
+    let hi = omegaMag;
+    for (let iter = 0; iter < 12; iter++) {
+      const mid = 0.5 * (lo + hi);
+      if (rodriguesRotate(t0, omegaAxis, mid)[1] >= -0.28) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    tTipRaw = rodriguesRotate(t0, omegaAxis, lo);
+    nFaceRaw = rodriguesRotate(eA0, omegaAxis, lo);
+  }
 
   const { t: shaftTangent, nFace: faceNormal, eL: elevNormal } = orthonormalizeFrame(
     tTipRaw,

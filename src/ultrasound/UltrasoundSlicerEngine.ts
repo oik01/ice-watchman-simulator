@@ -1154,6 +1154,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
       ? sdEllipsoid3D(x, y, z, 19.5, -6.0, 19.5, 11.4, 10.4, 11.4)
       : null;
   let raOpenSdf = 100.0;
+  let ivcDistLive = 100.0;
 
   // ============================================================================
   // C. RIGHT ATRIUM, VENAE CAVAE & SEPTAL LANDMARKS (IDs 1..12)
@@ -1241,20 +1242,37 @@ function evaluateAnalyticalCardiacAndDeviceField(
       4.2
     );
 
-    // 4. Superior Vena Cava (SVC) — active in superior RA so Posterior/Superior A/P tilt sweeps smoothly into SVC!
-    if (forLandmarkScan || (curStation === 'ra_venous' && rawY > (isTspLive ? 25.0 : 14.0))) {
+    // 4. Superior Vena Cava (SVC) & Posterior Caval-Atrial / Azygos Arch — active in superior RA so Posterior/Superior A/P tilt sweeps smoothly into SVC!
+    if (forLandmarkScan || (curStation === 'ra_venous' && rawY > (isTspLive ? 25.0 : 10.0))) {
       const svcCap = sdCapsule3D(x, y, z, -1.0, 22.0, -3.5, -0.8, 82.0, -4.8, 10.5);
-      commitHitFast(StructureId.SVC, svcCap.dist, 1.65, svcCap.nx, svcCap.ny, svcCap.nz, 0.44, true, 12.0, StructureId.RA_CAVITY, 3.8);
+      if (forLandmarkScan) {
+        commitHitFast(StructureId.SVC, svcCap.dist, 1.65, svcCap.nx, svcCap.ny, svcCap.nz, 0.44, true, 12.0, StructureId.RA_CAVITY, 3.8);
+      } else {
+        const svcPostJunc = sdCapsule3D(x, y, z, -4.5, 10.0, -8.5, -1.5, 78.0, -6.5, 12.5);
+        const svcLive = svcPostJunc.dist < svcCap.dist ? svcPostJunc : svcCap;
+        commitHitFast(StructureId.SVC, svcLive.dist, 1.85, svcLive.nx, svcLive.ny, svcLive.nz, 0.44, true, 13.5, StructureId.RA_CAVITY, 4.6);
+
+        const azygosCap = sdCapsule3D(x, y, z, -3.0, 32.0, -14.0, -8.0, 52.0, -28.0, 6.5);
+        commitHitFast(StructureId.SVC, azygosCap.dist, 1.55, azygosCap.nx, azygosCap.ny, azygosCap.nz, 0.46, true, 7.5, StructureId.SVC, 4.2);
+      }
       if (svcCap.dist < -1.8) {
         flowVy = -34.0 * (0.65 + 0.35 * sysEnv);
       }
     }
 
-    // 5. Inferior Vena Cava (IVC) — active in inferior RA so Anterior/Inferior A/P tilt sweeps smoothly into IVC!
+    // 5. Inferior Vena Cava (IVC) & Branching Hepatic Vein — active in inferior RA so Anterior/Inferior A/P tilt sweeps smoothly into IVC!
     if (forLandmarkScan || (curStation === 'ra_venous' && rawY < (isTspLive ? -15.0 : -10.0))) {
       const ivcCap = sdCapsule3D(x, y, z, -0.5, -16.0, -3.5, -0.6, -98.0, -5.8, 12.0);
+      ivcDistLive = ivcCap.dist;
       commitHitFast(StructureId.IVC, ivcCap.dist, 1.75, ivcCap.nx, ivcCap.ny, ivcCap.nz, 0.44, true, 14.0, StructureId.RA_CAVITY, 4.2);
-      if (ivcCap.dist < -1.9) {
+      if (!forLandmarkScan && !isTspLive && rawY < -22.0) {
+        const hepVeinCap = sdCapsule3D(x, y, z, -0.6, -34.0, -4.5, 18.0, -48.0, 12.0, 5.2);
+        if (hepVeinCap.dist < ivcDistLive) {
+          ivcDistLive = hepVeinCap.dist;
+        }
+        commitHitFast(StructureId.IVC, hepVeinCap.dist, 1.45, hepVeinCap.nx, hepVeinCap.ny, hepVeinCap.nz, 0.42, true, 5.2, StructureId.IVC, 4.0);
+      }
+      if (ivcDistLive < -1.8) {
         flowVy = 32.0 * (0.65 + 0.35 * diaEnv);
       }
     }
@@ -1453,6 +1471,13 @@ function evaluateAnalyticalCardiacAndDeviceField(
           if (tvChannel.dist < rvEllBase.dist) {
             rvEllBase = tvChannel;
           }
+          // Inferior-apical / diaphragmatic RV inflow continuation for extreme anterior (`+60°..+150°`) tilts (`y < -12` or `rawZ > 36`)
+          if (y < -12.0 || rawZ > 36.0) {
+            const rvAntApicalEll = sdEllipsoid3D(x, y, z, 38.5, -18.5, 38.5, 24.5 * rvContract, 26.5 * rvContract, 25.5 * rvContract);
+            if (rvAntApicalEll.dist < rvEllBase.dist) {
+              rvEllBase = rvAntApicalEll;
+            }
+          }
         }
       }
       rvEllDist = rvEllBase.dist;
@@ -1468,7 +1493,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
       commitHitFast(
         StructureId.RV_CAVITY,
         rvSdf,
-        forLandmarkScan ? 3.0 : 2.1,
+        forLandmarkScan ? 3.0 : rawY < -14.0 ? 3.2 : 2.1,
         rvEllBase.nx,
         rvEllBase.ny,
         rvEllBase.nz,
@@ -1476,7 +1501,7 @@ function evaluateAnalyticalCardiacAndDeviceField(
         true,
         24.0,
         StructureId.RA_CAVITY,
-        5.5
+        !forLandmarkScan && rawY < -14.0 ? 7.5 : 5.5
       );
 
       if (modVentObj) {
@@ -2148,6 +2173,24 @@ function evaluateAnalyticalCardiacAndDeviceField(
     const periEll = sdEllipsoid3D(x, y, z, 28.0, 2.0, 4.0, 48.0, 48.0, 46.0);
     if (Math.abs(periEll.dist) <= 2.2) {
       commitHitFast(StructureId.PERICARDIAL_SPACE, Math.abs(periEll.dist), 1.8, periEll.nx, periEll.ny, periEll.nz, 0.94, false);
+    }
+  } else if (curStation === 'ra_venous' && !isTspLive && !isLeftPvViewLive && rawY < -18.0) {
+    // Sub-CTI Diaphragmatic Pericardium & Sub-Diaphragmatic Hepatic Parenchyma Bed for extreme A/P tilts (`±60°..±150°`)
+    const yDiaphragm = -22.5 - 0.22 * Math.max(0.0, rawX) - 0.18 * Math.max(0.0, rawZ) + 1.2 * (M_warpHetero - 0.5);
+    if (
+      raOpenSdf > 1.2 &&
+      rvEllDist > 1.2 &&
+      ivcDistLive > 1.2 &&
+      !M_isInsideAnyBloodLumen &&
+      rawY <= yDiaphragm + 1.8 &&
+      rawY >= yDiaphragm - 38.0
+    ) {
+      if (Math.abs(rawY - yDiaphragm) <= 1.6) {
+        commitHitFast(StructureId.CTI_FLOOR, Math.abs(rawY - yDiaphragm), 1.6, 0.0, 1.0, 0.0, 0.66, false);
+      } else if (rawY < yDiaphragm - 1.0 && M_bestBackscatter < 0.12) {
+        const hepFade = Math.max(0.0, 1.0 - (yDiaphragm - rawY) / 38.0);
+        commitHitFast(StructureId.CTI_FLOOR, 0.25, 1.5, 0.0, 1.0, 0.0, (0.28 + 0.08 * M_warpHetero) * hepFade, false);
+      }
     }
   }
 
