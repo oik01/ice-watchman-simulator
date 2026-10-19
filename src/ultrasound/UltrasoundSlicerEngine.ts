@@ -1180,12 +1180,24 @@ function evaluateAnalyticalCardiacAndDeviceField(
         ? 4.0 * wVentRv + -4.0 * wHighRvot
         : 3.0;
     const raRx = (forLandmarkScan ? 22.0 : curStation === 'rv_outflow' ? 13.5 + 1.0 * wHighRvot : isTspLive ? 21.5 : 24.5) * raContract;
-    const raRy = (forLandmarkScan ? 28.0 : curStation === 'rv_outflow' ? 14.5 - 1.0 * wHighRvot : isTspLive ? 24.5 : 27.5) * raContract;
+    const isRaNeutralExt = !forLandmarkScan && curStation === 'ra_venous' && !isTspLive && !isLeftPvViewLive;
+    const raRy =
+      (forLandmarkScan
+        ? 28.0
+        : curStation === 'rv_outflow'
+          ? 14.5 - 1.0 * wHighRvot
+          : isTspLive
+            ? 24.5
+            : isRaNeutralExt && y < raCy
+              ? 35.5
+              : isRaNeutralExt && y > raCy
+                ? 34.0
+                : 27.5) * raContract;
     const raRz = (forLandmarkScan ? 22.0 : curStation === 'rv_outflow' ? 13.5 + 0.5 * wHighRvot : 22.5) * raContract;
 
-    const raEll = sdEllipsoid3D(x, y, z, raCx, raCy, raCz, raRx, raRy, raRz);
-    raOpenSdf = raEll.dist;
-    let raSdf = raEll.dist;
+    const raBaseObj = sdEllipsoid3D(x, y, z, raCx, raCy, raCz, raRx, raRy, raRz);
+    raOpenSdf = raBaseObj.dist;
+    let raSdf = raBaseObj.dist;
     if (!forLandmarkScan && curStation === 'ra_venous') {
       if (wTsp > 0.25) {
         // Near-field RA cavity in upper-left/center (`10-12 o'clock`) extending smoothly across the Superior/Inferior Limbus (`14_kour`)
@@ -1219,9 +1231,9 @@ function evaluateAnalyticalCardiacAndDeviceField(
       StructureId.RA_CAVITY,
       raSdf,
       raWallThick,
-      raEll.nx,
-      raEll.ny,
-      raEll.nz,
+      raBaseObj.nx,
+      raBaseObj.ny,
+      raBaseObj.nz,
       0.40,
       true,
       25.0,
@@ -1276,11 +1288,30 @@ function evaluateAnalyticalCardiacAndDeviceField(
 
     // 6, 7, 8, 9, 10: Eustachian, CTI, CS Ostium, Thebesian, Koch (inferior/posterior RA — reachable when tilting anteriorly/inferiorly!)
     if (forLandmarkScan || (!isTspLive && rawY < 8.0 && curStation === 'ra_venous' && !isLeftPvViewLive)) {
-      const eustCap = sdCapsule3D(vx, vy, vz, -4.0, -18.8, -2.0, 10.5, -17.5, 4.5, forLandmarkScan ? 3.6 : 1.9);
-      commitHitFast(StructureId.EUSTACHIAN_RIDGE, eustCap.dist, forLandmarkScan ? 1.6 : 0.85, eustCap.nx, eustCap.ny, eustCap.nz, 0.62, false);
+      if (forLandmarkScan) {
+        const eustCap = sdCapsule3D(vx, vy, vz, -4.0, -18.8, -2.0, 10.5, -17.5, 4.5, 3.6);
+        commitHitFast(StructureId.EUSTACHIAN_RIDGE, eustCap.dist, 1.6, eustCap.nx, eustCap.ny, eustCap.nz, 0.62, false);
 
-      const ctiCap = sdCapsule3D(vx, vy, vz, 2.0, -23.5, 4.0, 18.0, -21.0, 19.0, forLandmarkScan ? 4.2 : 2.8);
-      commitHitFast(StructureId.CTI_FLOOR, ctiCap.dist, forLandmarkScan ? 1.8 : 1.25, ctiCap.nx, ctiCap.ny, ctiCap.nz, 0.52, false);
+        const ctiCap = sdCapsule3D(vx, vy, vz, 2.0, -23.5, 4.0, 18.0, -21.0, 19.0, 4.2);
+        commitHitFast(StructureId.CTI_FLOOR, ctiCap.dist, 1.8, ctiCap.nx, ctiCap.ny, ctiCap.nz, 0.52, false);
+      } else {
+        const eustCap = sdCapsule3D(vx, vy, vz, -3.5, -17.5, -1.5, 11.5, -16.5, 6.5, 2.35);
+        commitHitFast(StructureId.EUSTACHIAN_RIDGE, eustCap.dist, 1.15, eustCap.nx, eustCap.ny, eustCap.nz, 0.68, false);
+
+        const ctiCap1 = sdCapsule3D(vx, vy, vz, 2.0, -22.5, 4.5, 20.5, -20.5, 21.5, 3.2);
+        const ctiCap2 = sdCapsule3D(vx, vy, vz, 10.0, -25.5, 10.0, 26.0, -24.5, 26.0, 3.0);
+        const ctiBest = ctiCap1.dist < ctiCap2.dist ? ctiCap1 : ctiCap2;
+        const ctiPouchDist = ctiBest.dist + 0.35 * (M_warpHetero - 0.5);
+        commitHitFast(StructureId.CTI_FLOOR, ctiPouchDist, 1.45, ctiBest.nx, ctiBest.ny, ctiBest.nz, 0.58, false);
+
+        // Bright inferior pericardial/diaphragmatic border underneath the CTI & inferior RV floor (`y ≈ -28..-42 mm`)
+        if (rawY < -25.0) {
+          const infPeriCap = sdCapsule3D(vx, vy, vz, 4.0, -29.5, 4.0, 42.0, -39.5, 36.0, 1.45);
+          if (infPeriCap.dist <= 1.8) {
+            commitHitFast(StructureId.PERICARDIAL_SPACE, Math.abs(infPeriCap.dist), 1.15, infPeriCap.nx, infPeriCap.ny, infPeriCap.nz, 0.78, false);
+          }
+        }
+      }
 
       if (forLandmarkScan || rawZ < 6.0) {
         const csCap1 = sdCapsule3D(x, y, z, 11.5, -13.0, 4.5, 18.5, -12.7, -8.5, 5.4);
@@ -1380,9 +1411,10 @@ function evaluateAnalyticalCardiacAndDeviceField(
 
     // 16. Right Ventricle (RV) Inflow & Trabeculated Cavity (evaluated BEFORE TV leaflets so the TV orifice is carved open!)
     if (forLandmarkScan || wHighRvot < 0.85) {
+      const rvRyLive = (y < -9.5 && wVentRv <= 0.35 ? 28.5 : 18.5) * rvContract;
       let rvEllBase = forLandmarkScan
         ? sdEllipsoid3D(x, y, z, 33.1, -2.0, 27.0, 22.0 * rvContract, 26.0 * rvContract, 22.0 * rvContract)
-        : sdEllipsoid3D(x, y, z, 35.0, -9.5, 30.5, 22.5 * rvContract, 18.5 * rvContract, 23.5 * rvContract);
+        : sdEllipsoid3D(x, y, z, 35.0, -9.5, 30.5, 22.5 * rvContract, rvRyLive, 23.5 * rvContract);
       let modVentObj: { dist: number; nx: number; ny: number; nz: number } | null = null;
       let rvPapVentObj: { dist: number; nx: number; ny: number; nz: number } | null = null;
       if (!forLandmarkScan) {
@@ -1521,12 +1553,16 @@ function evaluateAnalyticalCardiacAndDeviceField(
         const rvPap2 = sdCapsule3D(x, y, z, 31.0, 10.0, 3.0, 39.0, -9.0, 24.0, 4.2);
         const rvPapBest = rvPap2.dist < rvPap1.dist ? rvPap2 : rvPap1;
         commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPapBest.dist, 1.5, rvPapBest.nx, rvPapBest.ny, rvPapBest.nz, 0.68, false);
-      } else if (wVentRv <= 0.45 && rawX > 30.0 && rawZ > 28.0) {
+      } else if (wVentRv <= 0.45 && rawX > 24.0 && rawZ > 22.0 && rawY < 4.0) {
         const modCap1 = sdCapsule3D(x, y, z, 32.0, -14.5, 31.0, 44.0, -18.5, 41.5, 2.0);
-        commitHitFast(StructureId.MODERATOR_BAND, modCap1.dist, 0.80, modCap1.nx, modCap1.ny, modCap1.nz, 0.44, false);
+        const modCapInf = sdCapsule3D(x, y, z, 26.5, -22.5, 25.5, 42.0, -28.0, 38.0, 2.0);
+        const modBest = rawY < -14.0 && modCapInf.dist < modCap1.dist ? modCapInf : modCap1;
+        commitHitFast(StructureId.MODERATOR_BAND, modBest.dist, 0.80, modBest.nx, modBest.ny, modBest.nz, 0.44, false);
 
         const rvPap1 = sdCapsule3D(x, y, z, 36.5, -13.5, 35.0, 44.7, -2.5, 38.5, 2.4);
-        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPap1.dist, 0.80, rvPap1.nx, rvPap1.ny, rvPap1.nz, 0.44, false);
+        const rvPapInf = sdCapsule3D(x, y, z, 28.0, -18.5, 27.5, 36.5, -14.0, 35.0, 2.2);
+        const rvPapBest = rawY < -14.0 && rvPapInf.dist < rvPap1.dist ? rvPapInf : rvPap1;
+        commitHitFast(StructureId.RV_PAPILLARY_MUSCLES, rvPapBest.dist, 0.80, rvPapBest.nx, rvPapBest.ny, rvPapBest.nz, 0.44, false);
       }
     }
 
@@ -1599,20 +1635,22 @@ function evaluateAnalyticalCardiacAndDeviceField(
       );
     } else if (wHighRvot < 0.65) {
       const mpaCap = sdCapsule3D(x, y, z, 43.5, 30.0, 24.5, 42.0, 45.0, 14.0, 11.0);
+      const rpaCap = sdCapsule3D(x, y, z, 38.0, 38.0, 14.0, -8.0, 34.0, -18.0, 9.2);
+      const paLive = rpaCap.dist < mpaCap.dist ? rpaCap : mpaCap;
       commitHitFast(
         StructureId.MAIN_PA_LPA_RPA,
-        mpaCap.dist,
+        paLive.dist,
         1.55,
-        mpaCap.nx,
-        mpaCap.ny,
-        mpaCap.nz,
+        paLive.nx,
+        paLive.ny,
+        paLive.nz,
         0.46,
         true,
         11.0,
         StructureId.RVOT_INFUNDIBULUM,
         4.2
       );
-      if (mpaCap.dist < -1.5 && sysEnv > 0.08) {
+      if (paLive.dist < -1.5 && sysEnv > 0.08) {
         flowVx = -18.0 * sysEnv;
         flowVy = 72.0 * sysEnv;
         flowVz = -28.0 * sysEnv;
@@ -1674,14 +1712,22 @@ function evaluateAnalyticalCardiacAndDeviceField(
       rootRad * 0.96 + sinusBulge * 0.8,
       rootRad + sinusBulge
     );
+    let aoActiveObj = aoRootSphere;
+    if (rootBlend < 0.5 && rawY > 18.0) {
+      // Tubular Ascending Aorta extension (`y = +16..+64 mm`) for Posterior/Superior (`-P`) tilt sweeps
+      const ascTubularAo = sdCapsule3D(x, y, z, 22.5, 16.0, 23.0, 16.5, 54.0, 14.0, 9.8);
+      if (ascTubularAo.dist < aoActiveObj.dist) {
+        aoActiveObj = ascTubularAo;
+      }
+    }
 
     commitHitFast(
       StructureId.ASCENDING_AORTA_ROOT,
-      aoRootSphere.dist,
+      aoActiveObj.dist,
       1.45,
-      aoRootSphere.nx,
-      aoRootSphere.ny,
-      aoRootSphere.nz,
+      aoActiveObj.nx,
+      aoActiveObj.ny,
+      aoActiveObj.nz,
       0.48,
       true,
       rootRad + 1.0,
